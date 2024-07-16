@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "source generator": {
+      "commandName": "Project",
+      "commandLineArgs": "--filter *SourceGenerator*"
+    },
+    "generated mappings": {
+      "commandName": "Project",
+      "commandLineArgs": "--filter *MappingBenchmarks* --keepFiles --stopOnFirstError"
+    }
+  }
+}

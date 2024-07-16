@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Riok.Mapperly.Abstractions;
 using Riok.Mapperly.IntegrationTests.Dto;
 using Riok.Mapperly.IntegrationTests.Models;
@@ -49,6 +50,8 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
             target.StringValue += "+after-map";
             return target;
         }
+
+        public static string Version() => FileVersionInfo.GetVersionInfo(typeof(MapperAttribute).Assembly.Location).ProductVersion;
 
         public static void MapExistingList(List<string> src, List<int> dst)
         {
