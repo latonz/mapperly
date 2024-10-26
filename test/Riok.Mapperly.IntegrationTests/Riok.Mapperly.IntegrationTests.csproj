@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- setting the TargetFramework directly from the cli via -p:TargetFramework=netA.B does not work using a custom msbuild property seems to work -->
-    <MapperlyIntegrationTestsTargetFramework Condition="'$(MapperlyIntegrationTestsTargetFramework)' == ''">net8.0</MapperlyIntegrationTestsTargetFramework>
+    <MapperlyIntegrationTestsTargetFramework Condition="'$(MapperlyIntegrationTestsTargetFramework)' == ''">netstandard2.0</MapperlyIntegrationTestsTargetFramework>
     <TargetFramework>$(MapperlyIntegrationTestsTargetFramework)</TargetFramework>
 
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
@@ -12,8 +12,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
 
     <!-- .NET Framework 4.8 defaults to lang version 7.3, but we want to test nullable features. These are available in 8.0.
-          To also use init-only properties, we upgrade to lang version 9.0, which is works, but is not officially supported. -->
-    <LangVersion Condition="'$(TargetFramework)' == 'net48'">9.0</LangVersion>
+          To also use init-only properties, we upgrade to lang version 9.0, which works, but is not officially supported. -->
+    <LangVersion Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,13 +39,13 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0-rc.2.24474.1" Condition="'$(TargetFramework)' == 'net9.0'" />
   </ItemGroup>
 
-  <!-- diffplex is only compatible with net7.0 up to 2.x-->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
+  <!-- diffplex is only compatible with netstandard2.0/net7.0 up to 2.x-->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Update="Verify.DiffPlex" Version="2.2.1" />
   </ItemGroup>
 
   <!-- cannot use source generated polyfills since they require language version 11 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageReference Include="Portable.System.DateTimeOnly" Version="8.0.0" />
     <PackageReference Include="IsExternalInit" Version="1.0.3">
