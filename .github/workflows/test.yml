@@ -89,10 +89,13 @@ jobs:
       fail-fast: false
       matrix:
         dotnet:
-          - '9.0'
-          - '8.0'
-          - '7.0'
-          - '6.0'
+          #- version: '9.0'
+          #- version: '8.0'
+          #- version: '7.0'
+          #- version: '6.0'
+          # - version: '5.0'
+          - version: 'standard2.0'
+            installVersion: '9.0'
     steps:
       - uses: actions/checkout@v4
       # install required dotnet dependencies
@@ -102,7 +105,7 @@ jobs:
       - run: rm global.json
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ matrix.dotnet }}
+          dotnet-version: ${{ matrix.dotnet.installVersion || matrix.dotnet.version }}
       - run: dotnet --list-sdks
       - uses: actions/download-artifact@v4
         with:
@@ -113,16 +116,16 @@ jobs:
       - run: dotnet nuget add source "$(pwd)/artifacts"
       - run: >-
           dotnet build
-          -f net${{ matrix.dotnet }}
-          -p:MapperlyIntegrationTestsTargetFramework=net${{ matrix.dotnet }}
+          -f net${{ matrix.dotnet.version }}
+          -p:MapperlyIntegrationTestsTargetFramework=net${{ matrix.dotnet.version }}
           -p:MapperlyNugetPackageVersion="0.0.1-dev.$GITHUB_RUN_ID"
         working-directory: ./test/Riok.Mapperly.IntegrationTests
-      - run: dotnet test --no-build -f net${{ matrix.dotnet }}
+      - run: dotnet test --no-build -f net${{ matrix.dotnet.version }}
         working-directory: ./test/Riok.Mapperly.IntegrationTests
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-test-results-net${{ matrix.dotnet }}
+          name: verify-test-results-net${{ matrix.dotnet.version }}
           path: '**/*.received.*'
           retention-days: 3
   integration-test-net-framework:
