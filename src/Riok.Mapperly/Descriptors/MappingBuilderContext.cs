@@ -47,7 +47,7 @@ public class MappingBuilderContext : SimpleMappingBuilderContext
     {
         if (ignoreDerivedTypes)
         {
-            Configuration = Configuration with { DerivedTypes = [] };
+            Configuration = Configuration with { DerivedTypes = null };
         }
     }
 

@@ -1,9 +1,10 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
+using Riok.Mapperly.Configuration;
+using Riok.Mapperly.Emit.Syntax;
 
-namespace Riok.Mapperly.Descriptors.Mappings;
+namespace Riok.Mapperly.Descriptors.Mappings.DerivedTypes;
 
 /// <summary>
 /// A derived type mapping maps one base type or interface to another
@@ -12,37 +13,42 @@ namespace Riok.Mapperly.Descriptors.Mappings;
 public class DerivedTypeIfExpressionMapping(
     ITypeSymbol sourceType,
     ITypeSymbol targetType,
-    IReadOnlyCollection<INewInstanceMapping> typeMappings
+    IReadOnlyCollection<DerivedTypeMapping> derivedTypeMappings
 ) : NewInstanceMapping(sourceType, targetType)
 {
     public override ExpressionSyntax Build(TypeMappingBuildContext ctx)
     {
         // source is A x ? MapToA(x) : <other cases>
-        var typeExpressions = typeMappings
+        var typeExpressions = derivedTypeMappings
             .Reverse()
-            .Aggregate<INewInstanceMapping, ExpressionSyntax>(
-                DefaultLiteral(),
+            .Aggregate<DerivedTypeMapping, ExpressionSyntax>(
+                SyntaxFactoryHelper.DefaultLiteral(),
                 (aggregate, current) => BuildConditional(ctx, aggregate, current)
             );
 
         // cast to target type, to ensure the compiler picks the correct type
         // (B)(<ifs...>
-        return CastExpression(FullyQualifiedIdentifier(TargetType), ParenthesizedExpression(typeExpressions));
+        return SyntaxFactory.CastExpression(
+            SyntaxFactoryHelper.FullyQualifiedIdentifier(TargetType),
+            SyntaxFactory.ParenthesizedExpression(typeExpressions)
+        );
     }
 
     private ConditionalExpressionSyntax BuildConditional(
         TypeMappingBuildContext ctx,
         ExpressionSyntax notMatched,
-        INewInstanceMapping mapping
+        DerivedTypeMapping mapping
     )
     {
         // cannot use is pattern matching is operator due to expression limitations
         // use is with a cast instead
         // source is A ? MapToB((A)x) : <other cases>
         var castedSourceContext = ctx.WithSource(
-            ParenthesizedExpression(CastExpression(FullyQualifiedIdentifier(mapping.SourceType), ctx.Source))
+            SyntaxFactory.ParenthesizedExpression(
+                SyntaxFactory.CastExpression(SyntaxFactoryHelper.FullyQualifiedIdentifier(mapping.SourceType), ctx.Source)
+            )
         );
-        var condition = Is(ctx.Source, FullyQualifiedIdentifier(mapping.SourceType));
-        return Conditional(condition, mapping.Build(castedSourceContext), notMatched);
+        var condition = SyntaxFactoryHelper.Is(ctx.Source, SyntaxFactoryHelper.FullyQualifiedIdentifier(mapping.SourceType));
+        return SyntaxFactoryHelper.Conditional(condition, mapping.Build(castedSourceContext), notMatched);
     }
 }

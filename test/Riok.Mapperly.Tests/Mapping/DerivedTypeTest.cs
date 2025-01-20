@@ -290,4 +290,6 @@ public class DerivedTypeTest
             )
             .HaveAssertedAllDiagnostics();
     }
+
+    // use cases: with typed source member, with untyped source member, without source member
 }

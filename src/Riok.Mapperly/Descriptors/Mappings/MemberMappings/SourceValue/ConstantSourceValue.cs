@@ -10,5 +10,7 @@ namespace Riok.Mapperly.Descriptors.Mappings.MemberMappings.SourceValue;
 /// </summary>
 public class ConstantSourceValue(ExpressionSyntax value) : ISourceValue
 {
-    public ExpressionSyntax Build(TypeMappingBuildContext ctx) => value;
+    public ExpressionSyntax Value => value;
+
+    public ExpressionSyntax Build(TypeMappingBuildContext ctx) => Value;
 }

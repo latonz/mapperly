@@ -24,15 +24,39 @@ public sealed class MapDerivedTypeAttribute : Attribute
         TargetType = targetType;
     }
 
+    public MapDerivedTypeAttribute(Type targetType, object? discriminatorValue)
+    {
+        TargetType = targetType;
+        DiscriminatorValue = discriminatorValue;
+    }
+
+    public MapDerivedTypeAttribute(Type targetType, object? discriminatorValue, string member)
+    {
+        TargetType = targetType;
+        DiscriminatorValue = discriminatorValue;
+    }
+
+    public MapDerivedTypeAttribute(Type targetType, object? discriminatorValue, string[] member)
+    {
+        TargetType = targetType;
+        DiscriminatorValue = discriminatorValue;
+    }
+
     /// <summary>
     /// Gets the source type of the derived type mapping.
     /// </summary>
-    public Type SourceType { get; }
+    public Type? SourceType { get; }
 
     /// <summary>
     /// Gets the target type of the derived type mapping.
     /// </summary>
     public Type TargetType { get; }
+
+    public object? DiscriminatorValue { get; }
+
+    public IReadOnlyCollection<string>? Member { get; }
+
+    public string? MemberFullName { get; }
 }
 
 /// <summary>
@@ -45,3 +69,24 @@ public sealed class MapDerivedTypeAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 [Conditional("MAPPERLY_ABSTRACTIONS_SCOPE_RUNTIME")]
 public sealed class MapDerivedTypeAttribute<TSource, TTarget> : Attribute;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+[Conditional("MAPPERLY_ABSTRACTIONS_SCOPE_RUNTIME")]
+public sealed class MapDerivedTypeAttribute<TTarget> : Attribute
+{
+    public MapDerivedTypeAttribute(object? discriminatorValue, string member)
+    {
+        DiscriminatorValue = discriminatorValue;
+    }
+
+    public MapDerivedTypeAttribute(object? discriminatorValue, string[] member)
+    {
+        DiscriminatorValue = discriminatorValue;
+    }
+
+    public object? DiscriminatorValue { get; }
+
+    public IReadOnlyCollection<string>? Member { get; }
+
+    public string? MemberFullName { get; }
+}

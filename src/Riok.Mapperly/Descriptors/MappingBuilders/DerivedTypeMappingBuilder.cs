@@ -1,9 +1,13 @@
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Configuration;
+using Riok.Mapperly.Descriptors.MappingBodyBuilders;
 using Riok.Mapperly.Descriptors.Mappings;
+using Riok.Mapperly.Descriptors.Mappings.DerivedTypes;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
+using Riok.Mapperly.Descriptors.Mappings.MemberMappings.SourceValue;
 using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
+using Riok.Mapperly.Symbols.Members;
 
 namespace Riok.Mapperly.Descriptors.MappingBuilders;
 
@@ -31,7 +35,7 @@ public static class DerivedTypeMappingBuilder
         bool duplicatedSourceTypesAllowed = false
     )
     {
-        return ctx.Configuration.DerivedTypes.Count == 0
+        return ctx.Configuration.DerivedTypes == null
             ? null
             : BuildContainedMappings(ctx, ctx.Configuration.DerivedTypes, ctx.FindOrBuildMapping, duplicatedSourceTypesAllowed);
     }
@@ -41,7 +45,7 @@ public static class DerivedTypeMappingBuilder
         bool duplicatedSourceTypesAllowed = false
     )
     {
-        return ctx.Configuration.DerivedTypes.Count == 0
+        return ctx.Configuration.DerivedTypes == null
             ? null
             : BuildContainedMappings(
                 ctx,
@@ -53,23 +57,50 @@ public static class DerivedTypeMappingBuilder
 
     private static IReadOnlyCollection<TMapping> BuildContainedMappings<TMapping>(
         MappingBuilderContext ctx,
-        IReadOnlyCollection<DerivedTypeMappingConfiguration> configs,
+        DerivedTypesMappingConfiguration config,
         Func<ITypeSymbol, ITypeSymbol, MappingBuildingOptions, Location?, TMapping?> findOrBuildMapping,
-        bool duplicatedSourceTypesAllowed
+        bool duplicatedSourcesAllowed
     )
         where TMapping : ITypeMapping
     {
-        var derivedTypeMappingSourceTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-        var derivedTypeMappings = new List<TMapping>(configs.Count);
-
-        foreach (var config in configs)
+        MemberPath? typeDiscriminatorMember = null;
+        if (
+            config.TypeDiscriminatorMember != null
+            && !ctx.SymbolAccessor.TryFindMemberPath(ctx.Source, config.TypeDiscriminatorMember, out typeDiscriminatorMember)
+        )
         {
+            // TODO diagnostic
+            return [];
+        }
+
+        var derivedTypeMappingDiscriminators = new HashSet<(ITypeSymbol?, object?)>(
+            new TupleEqualityComparer<ITypeSymbol?, object?>(SymbolTypeEqualityComparer.TypeDefault, EqualityComparer<object?>.Default)
+        );
+        var derivedTypeMappings = new List<TMapping>(config.DerivedTypeMappings.Count);
+
+        foreach (var cfg in config.DerivedTypeMappings)
+        {
+            var sourceType = cfg.SourceType ?? ctx.Source;
+
             // set types non-nullable as they can never be null when type-switching.
-            var sourceType = config.SourceType.NonNullable();
-            var targetType = config.TargetType.NonNullable();
-            if (!duplicatedSourceTypesAllowed && !derivedTypeMappingSourceTypes.Add(sourceType))
+            sourceType = sourceType.NonNullable();
+            var targetType = cfg.TargetType.NonNullable();
+            if (
+                !duplicatedSourcesAllowed
+                && !derivedTypeMappingDiscriminators.Add((sourceType, cfg.DiscriminatorValue?.ConstantValue.Value))
+            )
             {
                 ctx.ReportDiagnostic(DiagnosticDescriptors.DerivedSourceTypeDuplicated, sourceType);
+                continue;
+            }
+
+            if (TryBuildDiscriminatorValue(ctx, cfg, typeDiscriminatorMember, out var discriminatorValue))
+                continue;
+
+            MemberPath? member = null;
+            if (cfg.Member != null && !ctx.SymbolAccessor.TryFindMemberPath(sourceType, cfg.Member, out member))
+            {
+                // TODO diagnostic
                 continue;
             }
 
@@ -96,7 +127,7 @@ public static class DerivedTypeMappingBuilder
                 sourceType,
                 targetType,
                 MappingBuildingOptions.KeepUserSymbol | MappingBuildingOptions.MarkAsReusable | MappingBuildingOptions.IgnoreDerivedTypes,
-                config.Location
+                cfg.Location
             );
             if (mapping == null)
             {
@@ -104,9 +135,51 @@ public static class DerivedTypeMappingBuilder
                 continue;
             }
 
-            derivedTypeMappings.Add(mapping);
+            derivedTypeMappings.Add(
+                new DerivedTypeMapping(
+                    sourceType,
+                    targetType,
+                    cfg.SourceType != null,
+                    discriminatorValue?.Value,
+                    member?.BuildGetter(ctx),
+                    mapping
+                )
+            );
         }
 
         return derivedTypeMappings;
+    }
+
+    private static bool TryBuildDiscriminatorValue(
+        MappingBuilderContext ctx,
+        DerivedTypeMappingConfiguration cfg,
+        MemberPath? typeDiscriminatorMember,
+        out ConstantSourceValue? discriminatorValue
+    )
+    {
+        discriminatorValue = null;
+        if (!cfg.DiscriminatorValue.HasValue)
+            return true;
+
+        if (typeDiscriminatorMember == null)
+        {
+            // TODO diagnostic
+            return false;
+        }
+
+        if (
+            !SourceValueBuilder.TryBuildConstantSourceValue(
+                ctx,
+                cfg.DiscriminatorValue.Value,
+                typeDiscriminatorMember,
+                out discriminatorValue
+            )
+        )
+        {
+            // TODO diagnostic
+            return false;
+        }
+
+        return true;
     }
 }

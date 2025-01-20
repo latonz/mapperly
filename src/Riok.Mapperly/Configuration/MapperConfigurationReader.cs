@@ -37,7 +37,7 @@ public class MapperConfigurationReader
                 mapper.EnumNamingStrategy
             ),
             new MembersMappingConfiguration([], [], [], [], [], mapper.IgnoreObsoleteMembersStrategy, mapper.RequiredMappingStrategy),
-            []
+            null
         );
     }
 
@@ -50,16 +50,25 @@ public class MapperConfigurationReader
 
         var enumConfig = BuildEnumConfig(reference, diagnostics);
         var membersConfig = BuildMembersConfig(reference, diagnostics);
-        var derivedTypesConfig = BuildDerivedTypeConfigs(reference.Method);
+        var derivedTypesConfig = BuildDerivedTypesConfig(reference.Method);
         return new MappingConfiguration(MapperConfiguration.Mapper, enumConfig, membersConfig, derivedTypesConfig);
     }
 
-    private IReadOnlyCollection<DerivedTypeMappingConfiguration> BuildDerivedTypeConfigs(IMethodSymbol method)
+    private DerivedTypesMappingConfiguration? BuildDerivedTypesConfig(IMethodSymbol method)
     {
-        return _dataAccessor
+        var derivedTypeMappingConfig = _dataAccessor.AccessFirstOrDefault<MapDerivedTypesAttribute, DerivedTypesMappingConfiguration>(
+            method
+        );
+        var derivedTypeMappings = _dataAccessor
             .Access<MapDerivedTypeAttribute, DerivedTypeMappingConfiguration>(method)
             .Concat(_dataAccessor.Access<MapDerivedTypeAttribute<object, object>, DerivedTypeMappingConfiguration>(method))
             .ToList();
+        if (derivedTypeMappings.Count == 0)
+            return null;
+
+        derivedTypeMappingConfig ??= new DerivedTypesMappingConfiguration();
+        derivedTypeMappingConfig.DerivedTypeMappings = derivedTypeMappings;
+        return derivedTypeMappingConfig;
     }
 
     private MembersMappingConfiguration BuildMembersConfig(MappingConfigurationReference configRef, DiagnosticCollection diagnostics)

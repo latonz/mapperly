@@ -1,11 +1,10 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
 using Riok.Mapperly.Emit.Syntax;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
 
-namespace Riok.Mapperly.Descriptors.Mappings;
+namespace Riok.Mapperly.Descriptors.Mappings.DerivedTypes;
 
 /// <summary>
 /// A derived type mapping maps one base type or interface to another
@@ -23,7 +22,7 @@ public class DerivedExistingTargetTypeSwitchMapping(
 
     public override IEnumerable<StatementSyntax> Build(TypeMappingBuildContext ctx, ExpressionSyntax target)
     {
-        var sourceExpression = TupleExpression(CommaSeparatedList(Argument(ctx.Source), Argument(target)));
+        var sourceExpression = SyntaxFactory.TupleExpression(SyntaxFactoryHelper.CommaSeparatedList(SyntaxFactory.Argument(ctx.Source), SyntaxFactory.Argument(target)));
         var caseSections = existingTargetTypeMappings.Select(x => BuildSwitchSection(ctx, x));
         var defaultSection = BuildDefaultSwitchSection(ctx, target);
 
@@ -39,44 +38,44 @@ public class DerivedExistingTargetTypeSwitchMapping(
         sectionCtx = sectionCtx.AddIndentation();
 
         // (A source, B target)
-        var positionalTypeMatch = PositionalPatternClause(
-            CommaSeparatedList(
-                Subpattern(DeclarationPattern(mapping.SourceType, sourceVariableName)),
-                Subpattern(DeclarationPattern(mapping.TargetType, targetVariableName))
+        var positionalTypeMatch = SyntaxFactory.PositionalPatternClause(
+            SyntaxFactoryHelper.CommaSeparatedList(
+                SyntaxFactory.Subpattern(SyntaxFactoryHelper.DeclarationPattern(mapping.SourceType, sourceVariableName)),
+                SyntaxFactory.Subpattern(SyntaxFactoryHelper.DeclarationPattern(mapping.TargetType, targetVariableName))
             )
         );
-        var pattern = RecursivePattern().WithPositionalPatternClause(positionalTypeMatch);
+        var pattern = SyntaxFactory.RecursivePattern().WithPositionalPatternClause(positionalTypeMatch);
 
         // case (A source, B target):
-        var caseLabel = CasePatternSwitchLabel(pattern).AddLeadingLineFeed(sectionCtx.SyntaxFactory.Indentation);
+        var caseLabel = SyntaxFactoryHelper.CasePatternSwitchLabel(pattern).AddLeadingLineFeed(sectionCtx.SyntaxFactory.Indentation);
 
         // break;
         var statementContext = sectionCtx.AddIndentation();
-        var breakStatement = BreakStatement().AddLeadingLineFeed(statementContext.SyntaxFactory.Indentation);
-        var target = IdentifierName(targetVariableName);
+        var breakStatement = SyntaxFactory.BreakStatement().AddLeadingLineFeed(statementContext.SyntaxFactory.Indentation);
+        var target = SyntaxFactory.IdentifierName(targetVariableName);
         var statements = mapping.Build(statementContext, target).Append(breakStatement);
 
-        return SwitchSection(caseLabel, statements);
+        return SyntaxFactoryHelper.SwitchSection(caseLabel, statements);
     }
 
     private SwitchSectionSyntax BuildDefaultSwitchSection(TypeMappingBuildContext ctx, ExpressionSyntax target)
     {
         // default:
         var sectionCtx = ctx.SyntaxFactory.AddIndentation();
-        var defaultCaseLabel = DefaultSwitchLabel().AddLeadingLineFeed(sectionCtx.Indentation);
+        var defaultCaseLabel = SyntaxFactory.DefaultSwitchLabel().AddLeadingLineFeed(sectionCtx.Indentation);
 
         // throw new ArgumentException(msg, nameof(ctx.Source)),
-        var sourceTypeExpr = ctx.SyntaxFactory.Invocation(MemberAccess(ctx.Source, GetTypeMethodName));
-        var targetTypeExpr = ctx.SyntaxFactory.Invocation(MemberAccess(target, GetTypeMethodName));
+        var sourceTypeExpr = ctx.SyntaxFactory.Invocation(SyntaxFactoryHelper.MemberAccess(ctx.Source, GetTypeMethodName));
+        var targetTypeExpr = ctx.SyntaxFactory.Invocation(SyntaxFactoryHelper.MemberAccess(target, GetTypeMethodName));
         var statementContext = sectionCtx.AddIndentation();
-        var throwExpression = ThrowArgumentExpression(
-                InterpolatedString($"Cannot map {sourceTypeExpr} to {targetTypeExpr} as there is no known derived type mapping"),
+        var throwExpression = SyntaxFactoryHelper.ThrowArgumentExpression(
+                SyntaxFactoryHelper.InterpolatedString($"Cannot map {sourceTypeExpr} to {targetTypeExpr} as there is no known derived type mapping"),
                 ctx.Source
             )
             .AddLeadingLineFeed(statementContext.Indentation);
 
-        var statements = new StatementSyntax[] { ExpressionStatement(throwExpression) };
+        var statements = new StatementSyntax[] { SyntaxFactory.ExpressionStatement(throwExpression) };
 
-        return SwitchSection(defaultCaseLabel, statements);
+        return SyntaxFactoryHelper.SwitchSection(defaultCaseLabel, statements);
     }
 }

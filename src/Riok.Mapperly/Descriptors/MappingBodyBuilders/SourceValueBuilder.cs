@@ -9,6 +9,7 @@ using Riok.Mapperly.Descriptors.Mappings.MemberMappings;
 using Riok.Mapperly.Descriptors.Mappings.MemberMappings.SourceValue;
 using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
+using Riok.Mapperly.Symbols.Members;
 using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
 
 namespace Riok.Mapperly.Descriptors.MappingBodyBuilders;
@@ -57,7 +58,14 @@ internal static class SourceValueBuilder
         ctx.SetMembersMapped(memberMappingInfo);
 
         if (memberMappingInfo.ValueConfiguration!.Value != null)
-            return TryBuildConstantSourceValue(ctx, memberMappingInfo, out sourceValue);
+        {
+            return TryBuildConstantSourceValue(
+                ctx.BuilderContext,
+                memberMappingInfo.ValueConfiguration.Value.Value,
+                memberMappingInfo.TargetMember,
+                out sourceValue
+            );
+        }
 
         if (memberMappingInfo.ValueConfiguration!.Use != null)
             return TryBuildMethodProvidedSourceValue(ctx, memberMappingInfo, out sourceValue);
@@ -65,26 +73,18 @@ internal static class SourceValueBuilder
         throw new InvalidOperationException($"Illegal {nameof(MemberValueMappingConfiguration)}");
     }
 
-    private static bool TryBuildConstantSourceValue(
-        IMembersBuilderContext<IMapping> ctx,
-        MemberMappingInfo memberMappingInfo,
-        [NotNullWhen(true)] out ISourceValue? sourceValue
+    internal static bool TryBuildConstantSourceValue(
+        MappingBuilderContext ctx,
+        AttributeValue value,
+        MemberPath targetMember,
+        [NotNullWhen(true)] out ConstantSourceValue? sourceValue
     )
     {
-        var value = memberMappingInfo.ValueConfiguration!.Value!.Value;
-
         // the target is a non-nullable reference type,
         // but the provided value is null or default (for default IsNullable is also true)
-        if (
-            value.ConstantValue.IsNull
-            && memberMappingInfo.TargetMember.MemberType.IsReferenceType
-            && !memberMappingInfo.TargetMember.Member.IsNullable
-        )
+        if (value.ConstantValue.IsNull && targetMember.MemberType.IsReferenceType && !targetMember.MemberType.IsNullable())
         {
-            ctx.BuilderContext.ReportDiagnostic(
-                DiagnosticDescriptors.CannotMapValueNullToNonNullable,
-                memberMappingInfo.TargetMember.ToDisplayString()
-            );
+            ctx.ReportDiagnostic(DiagnosticDescriptors.CannotMapValueNullToNonNullable, targetMember.ToDisplayString());
             sourceValue = new ConstantSourceValue(SuppressNullableWarning(value.Expression));
             return true;
         }
@@ -92,15 +92,12 @@ internal static class SourceValueBuilder
         // target is value type but value is null
         if (
             value.ConstantValue.IsNull
-            && memberMappingInfo.TargetMember.MemberType.IsValueType
-            && !memberMappingInfo.TargetMember.MemberType.IsNullableValueType()
+            && targetMember.MemberType.IsValueType
+            && !targetMember.MemberType.IsNullableValueType()
             && value.Expression.IsKind(SyntaxKind.NullLiteralExpression)
         )
         {
-            ctx.BuilderContext.ReportDiagnostic(
-                DiagnosticDescriptors.CannotMapValueNullToNonNullable,
-                memberMappingInfo.TargetMember.ToDisplayString()
-            );
+            ctx.ReportDiagnostic(DiagnosticDescriptors.CannotMapValueNullToNonNullable, targetMember.ToDisplayString());
             sourceValue = new ConstantSourceValue(DefaultLiteral());
             return true;
         }
@@ -116,13 +113,13 @@ internal static class SourceValueBuilder
 
         // use non-nullable target type to allow non-null value type assignments
         // to nullable value types
-        if (!SymbolEqualityComparer.Default.Equals(value.ConstantValue.Type, memberMappingInfo.TargetMember.MemberType.NonNullable()))
+        if (!SymbolEqualityComparer.Default.Equals(value.ConstantValue.Type, targetMember.MemberType.NonNullable()))
         {
-            ctx.BuilderContext.ReportDiagnostic(
+            ctx.ReportDiagnostic(
                 DiagnosticDescriptors.MapValueTypeMismatch,
                 value.Expression.ToFullString(),
                 value.ConstantValue.Type?.ToDisplayString() ?? "unknown",
-                memberMappingInfo.TargetMember.ToDisplayString()
+                targetMember.ToDisplayString()
             );
             sourceValue = null;
             return false;
@@ -137,12 +134,12 @@ internal static class SourceValueBuilder
                 // expand enum member access to fully qualified identifier
                 // use simple member name approach instead of slower visitor pattern on the expression
                 var enumMemberName = ((MemberAccessExpressionSyntax)value.Expression).Name.Identifier.Text;
-                var enumTypeFullName = FullyQualifiedIdentifier(memberMappingInfo.TargetMember.MemberType.NonNullable());
+                var enumTypeFullName = FullyQualifiedIdentifier(targetMember.MemberType.NonNullable());
                 sourceValue = new ConstantSourceValue(MemberAccess(enumTypeFullName, enumMemberName));
                 return true;
             case TypedConstantKind.Type:
             case TypedConstantKind.Array:
-                ctx.BuilderContext.ReportDiagnostic(DiagnosticDescriptors.MapValueUnsupportedType, value.ConstantValue.Kind.ToString());
+                ctx.ReportDiagnostic(DiagnosticDescriptors.MapValueUnsupportedType, value.ConstantValue.Kind.ToString());
                 break;
         }
 

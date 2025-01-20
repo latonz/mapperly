@@ -763,6 +763,15 @@ public static class DiagnosticDescriptors
         true
     );
 
+    public static readonly DiagnosticDescriptor DerivedSourceTypeNull = new(
+        "RMG091",
+        "Derived source type is null, without specifying a discriminator member",
+        "Derived source type is null, without specifying a discriminator member",
+        DiagnosticCategories.Mapper,
+        DiagnosticSeverity.Error,
+        true
+    );
+
     private static string BuildHelpUri(string id)
     {
 #if ENV_NEXT

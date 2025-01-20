@@ -6,5 +6,5 @@ public record MappingConfiguration(
     MapperAttribute Mapper,
     EnumMappingConfiguration Enum,
     MembersMappingConfiguration Members,
-    IReadOnlyCollection<DerivedTypeMappingConfiguration> DerivedTypes
+    DerivedTypesMappingConfiguration? DerivedTypes
 );
