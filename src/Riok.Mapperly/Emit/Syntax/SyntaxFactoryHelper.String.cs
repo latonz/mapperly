@@ -21,6 +21,17 @@ public partial struct SyntaxFactoryHelper
     public static InvocationExpressionSyntax NameOf(ExpressionSyntax expression) =>
         InvocationWithoutIndention(_nameofIdentifier, expression);
 
+    private ExpressionSyntax ParameterNameOfOrStringLiteral(ExpressionSyntax expression)
+    {
+#if ROSLYN4_4_OR_GREATER
+        // nameof(parameter) was introduced in c# 11.0
+        if (syntaxLanguageVersion >= LanguageVersion.CSharp11)
+            return NameOf(expression);
+#endif
+
+        return StringLiteral(expression.ToFullString());
+    }
+
     public static IdentifierNameSyntax FullyQualifiedIdentifier(ITypeSymbol typeSymbol) =>
         IdentifierName(typeSymbol.FullyQualifiedIdentifierName());
 

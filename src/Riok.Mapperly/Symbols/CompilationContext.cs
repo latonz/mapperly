@@ -1,17 +1,21 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Riok.Mapperly.Descriptors;
 using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Symbols;
 
 public sealed record CompilationContext(
-    Compilation Compilation,
+    CSharpCompilation Compilation,
+    LanguageVersion ParseLanguageVersion,
     WellKnownTypes Types,
     ImmutableArray<Compilation> NestedCompilations,
     FileNameBuilder FileNameBuilder
 )
 {
+    public LanguageVersion CompileLanguageVersion => Compilation.LanguageVersion;
+
     public SemanticModel? GetSemanticModel(SyntaxTree tree)
     {
         if (Compilation.ContainsSyntaxTree(tree))

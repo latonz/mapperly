@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.UnsafeAccess;
@@ -18,10 +19,11 @@ public class MapperDescriptor
 
     public bool Static { get; set; }
 
-    public MapperDescriptor(MapperDeclaration declaration, UniqueNameBuilder nameBuilder)
+    public MapperDescriptor(MapperDeclaration declaration, UniqueNameBuilder nameBuilder, LanguageVersion parseLanguageVersion)
     {
         _declaration = declaration;
         NameBuilder = nameBuilder;
+        ParseLanguageVersion = parseLanguageVersion;
         Name = BuildName(declaration.Symbol);
         UnsafeAccessorName = nameBuilder.New(AccessorClassName);
 
@@ -30,6 +32,8 @@ public class MapperDescriptor
             Namespace = Symbol.ContainingNamespace.ToDisplayString();
         }
     }
+
+    public LanguageVersion ParseLanguageVersion { get; }
 
     public string Name { get; }
 

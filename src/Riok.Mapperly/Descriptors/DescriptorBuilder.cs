@@ -40,7 +40,7 @@ public class DescriptorBuilder
         MapperConfiguration defaultMapperConfiguration
     )
     {
-        _mapperDescriptor = new MapperDescriptor(mapperDeclaration, _methodNameBuilder);
+        _mapperDescriptor = new MapperDescriptor(mapperDeclaration, _methodNameBuilder, compilationContext.ParseLanguageVersion);
         _symbolAccessor = symbolAccessor;
         _types = compilationContext.Types;
         _mappingBodyBuilder = new MappingBodyBuilder(_mappings);

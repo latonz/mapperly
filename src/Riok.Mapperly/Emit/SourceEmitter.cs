@@ -13,7 +13,11 @@ public static class SourceEmitter
 
     public static CompilationUnitSyntax Build(MapperDescriptor descriptor, CancellationToken cancellationToken)
     {
-        var ctx = new SourceEmitterContext(descriptor.Static, descriptor.NameBuilder, new SyntaxFactoryHelper());
+        var ctx = new SourceEmitterContext(
+            descriptor.Static,
+            descriptor.NameBuilder,
+            new SyntaxFactoryHelper(descriptor.ParseLanguageVersion)
+        );
         ctx = IndentForMapper(ctx, descriptor.Symbol);
 
         var memberCtx = ctx.AddIndentation();
