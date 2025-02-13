@@ -42,6 +42,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>analyzers</IncludeAssets>
     </PackageReference>
+
+    <!-- todo this should not be used in a generator... -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.11.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,7 +56,8 @@
   </ItemGroup>
 
   <!--
-  This ensures the library will be packaged as a source generator when we use `dotnet pack`
+  This ensures the library will be packaged as a source generator when we use `dotnet pack`.
+  The abstractions dll needs to be available to both, the source generator and the target project.
   -->
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="\" />

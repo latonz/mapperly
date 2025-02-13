@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Helpers;
 
@@ -29,6 +30,9 @@ public class DiagnosticCollection(Location defaultLocation) : IReadOnlyCollectio
             }
         }
 
-        _diagnostics.Add(Diagnostic.Create(descriptor, location ?? defaultLocation, messageArgs));
+        // TODO
+        var properties = ImmutableDictionary<string, string?>.Empty.Add("Member", "fooBar");
+
+        _diagnostics.Add(Diagnostic.Create(descriptor, location ?? defaultLocation, properties, messageArgs));
     }
 }
