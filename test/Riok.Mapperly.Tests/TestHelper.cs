@@ -104,6 +104,26 @@ public static class TestHelper
         return driver.RunGenerators(compilation);
     }
 
+    public static CSharpCompilationOptions BuildCompilationOptions(NullableContextOptions nullableOption)
+    {
+        return new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: nullableOption);
+    }
+
+    public static IEnumerable<PortableExecutableReference> BuildReferences(bool addMapperlyReferences = true)
+    {
+        var references = AppDomain
+            .CurrentDomain.GetAssemblies()
+            .Where(x => !x.IsDynamic && !string.IsNullOrWhiteSpace(x.Location))
+            .Select(x => MetadataReference.CreateFromFile(x.Location));
+        if (addMapperlyReferences)
+        {
+            references = references.Append(MetadataReference.CreateFromFile(typeof(MapperGenerator).Assembly.Location));
+            references = references.Append(MetadataReference.CreateFromFile(typeof(MapperAttribute).Assembly.Location));
+        }
+
+        return references;
+    }
+
     private static CSharpCompilation BuildCompilation(
         string name,
         NullableContextOptions nullableOption,
@@ -111,24 +131,10 @@ public static class TestHelper
         params SyntaxTree[] syntaxTrees
     )
     {
-        var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: nullableOption);
-        var compilation = CSharpCompilation.Create(name, syntaxTrees, options: compilationOptions);
-
-        var references = AppDomain
-            .CurrentDomain.GetAssemblies()
-            .Where(x => !x.IsDynamic && !string.IsNullOrWhiteSpace(x.Location))
-            .Select(x => MetadataReference.CreateFromFile(x.Location));
-        compilation = compilation.AddReferences(references);
-
-        if (addMapperlyReferences)
-        {
-            compilation = compilation.AddReferences(
-                MetadataReference.CreateFromFile(typeof(MapperGenerator).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(MapperAttribute).Assembly.Location)
-            );
-        }
-
-        return compilation;
+        var compilationOptions = BuildCompilationOptions(nullableOption);
+        return CSharpCompilation
+            .Create(name, syntaxTrees, options: compilationOptions)
+            .AddReferences(BuildReferences(addMapperlyReferences));
     }
 
     private static IEnumerable<MethodDeclarationSyntax> ExtractAllMethods(SyntaxNode? root)
