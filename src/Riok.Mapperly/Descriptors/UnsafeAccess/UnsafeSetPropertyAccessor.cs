@@ -1,12 +1,12 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Emit;
-using Riok.Mapperly.Emit.Syntax;
 using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Symbols.Members;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
+using static Riok.Mapperly.Common.Syntax.SyntaxFactoryHelper;
 
 namespace Riok.Mapperly.Descriptors.UnsafeAccess;
 
@@ -36,8 +36,7 @@ public class UnsafeSetPropertyAccessor(IPropertySymbol symbol, string methodName
         var parameters = ParameterList(CommaSeparatedList(target, targetValue));
         var attribute = ctx.SyntaxFactory.UnsafeAccessorAttribute(UnsafeAccessorType.Method, $"set_{symbol.Name}");
 
-        return PublicStaticExternMethod(
-            ctx,
+        return ctx.SyntaxFactory.PublicStaticExternMethod(
             PredefinedType(Token(SyntaxKind.VoidKeyword)).AddTrailingSpace(),
             methodName,
             parameters,

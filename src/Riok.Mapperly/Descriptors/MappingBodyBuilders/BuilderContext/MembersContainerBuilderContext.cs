@@ -1,6 +1,6 @@
+using Riok.Mapperly.Common.Diagnostics;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors.Mappings.MemberMappings;
-using Riok.Mapperly.Diagnostics;
-using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Symbols.Members;
 
 namespace Riok.Mapperly.Descriptors.MappingBodyBuilders.BuilderContext;

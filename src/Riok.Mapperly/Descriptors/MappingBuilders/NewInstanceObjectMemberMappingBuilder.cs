@@ -1,8 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Common.Diagnostics;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
-using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Descriptors.MappingBuilders;

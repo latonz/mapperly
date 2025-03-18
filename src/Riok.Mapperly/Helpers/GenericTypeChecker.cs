@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors;
 
 namespace Riok.Mapperly.Helpers;

@@ -31,9 +31,12 @@
 
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
+    <AdditionalFiles Remove="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Remove="AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- todo -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -42,13 +45,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>analyzers</IncludeAssets>
     </PackageReference>
-
-    <!-- todo this should not be used in a generator... -->
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.11.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Riok.Mapperly.Abstractions\Riok.Mapperly.Abstractions.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Riok.Mapperly.Common\Riok.Mapperly.Common.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup Condition="!$(DefineConstants.Contains('DEBUG_SOURCE_GENERATOR'))">

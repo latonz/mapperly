@@ -1,8 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Riok.Mapperly.Abstractions.ReferenceHandling;
-using Riok.Mapperly.Helpers;
-using Riok.Mapperly.Symbols;
+using Riok.Mapperly.Common.Symbols;
 
 namespace Riok.Mapperly.Descriptors.Mappings.UserMappings;
 

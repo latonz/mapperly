@@ -1,12 +1,12 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Descriptors.Constructors;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Emit;
-using Riok.Mapperly.Emit.Syntax;
 using Riok.Mapperly.Helpers;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
+using static Riok.Mapperly.Common.Syntax.SyntaxFactoryHelper;
 
 namespace Riok.Mapperly.Descriptors.UnsafeAccess;
 
@@ -19,7 +19,7 @@ public class UnsafeConstructorAccessor(IMethodSymbol symbol, string className, s
         var typeToCreate = IdentifierName(symbol.ContainingType.FullyQualifiedIdentifierName()).AddTrailingSpace();
         var parameters = ParameterList(symbol.Parameters);
         var attribute = ctx.SyntaxFactory.UnsafeAccessorAttribute(UnsafeAccessorType.Constructor);
-        return PublicStaticExternMethod(ctx, typeToCreate, methodName, parameters, [attribute]);
+        return ctx.SyntaxFactory.PublicStaticExternMethod(typeToCreate, methodName, parameters, [attribute]);
     }
 
     public ExpressionSyntax CreateInstance(

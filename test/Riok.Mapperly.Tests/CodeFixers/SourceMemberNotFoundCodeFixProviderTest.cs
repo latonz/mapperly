@@ -1,9 +1,3 @@
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Riok.Mapperly.CodeFixers;
-
 namespace Riok.Mapperly.Tests.CodeFixers;
 
 public class SourceMemberNotFoundCodeFixProviderTest

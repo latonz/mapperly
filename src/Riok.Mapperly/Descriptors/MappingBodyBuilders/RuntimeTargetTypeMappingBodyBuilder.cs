@@ -1,7 +1,8 @@
+using Riok.Mapperly.Common.Diagnostics;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors.MappingBuilders;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
-using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Symbols;
 

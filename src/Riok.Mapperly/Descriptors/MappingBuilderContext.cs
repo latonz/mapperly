@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Riok.Mapperly.Common.Diagnostics;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Configuration;
 using Riok.Mapperly.Descriptors.Constructors;
 using Riok.Mapperly.Descriptors.Enumerables;
@@ -7,7 +9,6 @@ using Riok.Mapperly.Descriptors.FormatProviders;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
-using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Descriptors;

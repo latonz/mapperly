@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors;
 using Riok.Mapperly.Helpers;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
+using static Riok.Mapperly.Common.Syntax.SyntaxFactoryHelper;
 using MemberGetterPair = (Riok.Mapperly.Symbols.Members.IMappableMember Member, Riok.Mapperly.Symbols.Members.IMemberGetter Getter);
 
 namespace Riok.Mapperly.Symbols.Members;

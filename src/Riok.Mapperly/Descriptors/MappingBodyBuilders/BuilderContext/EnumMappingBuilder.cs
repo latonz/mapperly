@@ -2,8 +2,8 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Common.Diagnostics;
 using Riok.Mapperly.Configuration;
-using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Descriptors.MappingBodyBuilders.BuilderContext;

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
+using Riok.Mapperly.Common.Symbols;
 
 namespace Riok.Mapperly.Helpers;
 

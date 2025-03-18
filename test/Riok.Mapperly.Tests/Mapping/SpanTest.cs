@@ -1,5 +1,5 @@
 using Riok.Mapperly.Abstractions;
-using Riok.Mapperly.Diagnostics;
+using Riok.Mapperly.Common.Diagnostics;
 
 namespace Riok.Mapperly.Tests.Mapping;
 
@@ -587,10 +587,7 @@ public class SpanTest
         TestHelper
             .GenerateMapper(source, TestHelperOptions.AllowDiagnostics)
             .Should()
-            .HaveDiagnostic(
-                Riok.Mapperly.Diagnostics.DiagnosticDescriptors.CannotMapToReadOnlyType,
-                "Cannot map to read-only type System.Span<int>"
-            )
+            .HaveDiagnostic(DiagnosticDescriptors.CannotMapToReadOnlyType, "Cannot map to read-only type System.Span<int>")
             .HaveAssertedAllDiagnostics();
     }
 

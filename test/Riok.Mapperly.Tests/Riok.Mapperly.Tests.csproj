@@ -9,5 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Riok.Mapperly\Riok.Mapperly.csproj" />
     <ProjectReference Include="..\..\src\Riok.Mapperly.Abstractions\Riok.Mapperly.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\Riok.Mapperly.Common\Riok.Mapperly.Common.csproj" />
   </ItemGroup>
 </Project>

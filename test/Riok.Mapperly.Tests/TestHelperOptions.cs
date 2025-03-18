@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Riok.Mapperly.Diagnostics;
+using Riok.Mapperly.Common.Diagnostics;
 
 namespace Riok.Mapperly.Tests;
 

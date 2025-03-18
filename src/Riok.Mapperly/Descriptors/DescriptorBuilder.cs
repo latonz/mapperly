@@ -1,6 +1,9 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Riok.Mapperly.Abstractions;
 using Riok.Mapperly.Abstractions.ReferenceHandling;
+using Riok.Mapperly.Common.Diagnostics;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Configuration;
 using Riok.Mapperly.Descriptors.Constructors;
 using Riok.Mapperly.Descriptors.ExternalMappings;
@@ -40,7 +43,7 @@ public class DescriptorBuilder
         MapperConfiguration defaultMapperConfiguration
     )
     {
-        var supportedFeatures = SupportedFeatures.Build(compilationContext.Types, symbolAccessor, compilationContext.ParseLanguageVersion);
+        var supportedFeatures = BuildSupportedFeatures(compilationContext.Types, symbolAccessor, compilationContext.ParseLanguageVersion);
         _mapperDescriptor = new MapperDescriptor(mapperDeclaration, _methodNameBuilder, supportedFeatures);
         _symbolAccessor = symbolAccessor;
         _types = compilationContext.Types;
@@ -254,5 +257,17 @@ public class DescriptorBuilder
                 mapping.TargetType.ToDisplayString()
             );
         }
+    }
+
+    private SupportedFeatures BuildSupportedFeatures(WellKnownTypes types, SymbolAccessor accessor, LanguageVersion parseLanguageVersion)
+    {
+        return new()
+        {
+#if ROSLYN4_4_OR_GREATER
+            // nameof(parameter) was introduced in c# 11.0
+            NameOfParameter = parseLanguageVersion >= LanguageVersion.CSharp11,
+#endif
+            NullableAttributes = types.NotNullIfNotNullAttribute != null && accessor.IsDirectlyAccessible(types.NotNullIfNotNullAttribute),
+        };
     }
 }

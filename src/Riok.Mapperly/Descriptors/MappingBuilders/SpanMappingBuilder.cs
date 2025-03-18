@@ -1,9 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Common.Diagnostics;
 using Riok.Mapperly.Descriptors.Enumerables;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
-using Riok.Mapperly.Diagnostics;
 
 namespace Riok.Mapperly.Descriptors.MappingBuilders;
 

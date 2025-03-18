@@ -1,5 +1,5 @@
+using Riok.Mapperly.Common.Diagnostics;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
-using Riok.Mapperly.Diagnostics;
 
 namespace Riok.Mapperly.Descriptors.MappingBodyBuilders;
 

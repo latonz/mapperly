@@ -1,3 +1,4 @@
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
 
 namespace Riok.Mapperly.Symbols;

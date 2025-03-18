@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Common.Symbols;
 using Riok.Mapperly.Configuration;
 using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Symbols;

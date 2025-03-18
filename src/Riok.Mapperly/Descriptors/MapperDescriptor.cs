@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.UnsafeAccess;
 using Riok.Mapperly.Helpers;

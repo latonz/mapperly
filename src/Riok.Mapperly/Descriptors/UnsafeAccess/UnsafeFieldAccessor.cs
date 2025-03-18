@@ -1,12 +1,12 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Emit;
-using Riok.Mapperly.Emit.Syntax;
 using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Symbols.Members;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Riok.Mapperly.Emit.Syntax.SyntaxFactoryHelper;
+using static Riok.Mapperly.Common.Syntax.SyntaxFactoryHelper;
 
 namespace Riok.Mapperly.Descriptors.UnsafeAccess;
 
@@ -35,7 +35,7 @@ public class UnsafeFieldAccessor(IFieldSymbol symbol, string methodName) : IUnsa
         var returnType = RefType(IdentifierName(symbol.Type.FullyQualifiedIdentifierName()).AddTrailingSpace())
             .WithRefKeyword(Token(TriviaList(), SyntaxKind.RefKeyword, TriviaList(Space)));
 
-        return PublicStaticExternMethod(ctx, returnType, methodName, parameters, [attribute]);
+        return ctx.SyntaxFactory.PublicStaticExternMethod(returnType, methodName, parameters, [attribute]);
     }
 
     public ExpressionSyntax BuildAccess(ExpressionSyntax? baseAccess, bool nullConditional = false)

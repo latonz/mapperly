@@ -2,9 +2,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Riok.Mapperly.Abstractions;
+using Riok.Mapperly.Common.Diagnostics;
 using Riok.Mapperly.Configuration;
 using Riok.Mapperly.Descriptors;
-using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Emit;
 using Riok.Mapperly.Helpers;
 using Riok.Mapperly.Output;

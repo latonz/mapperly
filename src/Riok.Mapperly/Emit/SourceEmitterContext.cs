@@ -1,4 +1,4 @@
-using Riok.Mapperly.Emit.Syntax;
+using Riok.Mapperly.Common.Syntax;
 using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Emit;
