@@ -121,9 +121,9 @@ public class EnumerableExistingTargetTest
             .Should()
             .HaveSingleMethodBody(
                 """
-                foreach (var item in source.Subs)
+                foreach (var sub in source.Subs)
                 {
-                    target.Subs.Add(item);
+                    target.Subs.Add(sub);
                 }
                 """
             );

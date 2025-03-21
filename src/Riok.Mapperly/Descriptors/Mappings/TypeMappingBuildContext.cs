@@ -75,6 +75,12 @@ public readonly record struct TypeMappingBuildContext
         return (WithSource(IdentifierName(scopedSourceName)), scopedSourceName);
     }
 
+    public (TypeMappingBuildContext Context, string SourceName) WithNewSourceForEnumeration()
+    {
+        var scopedSourceName = NameBuilder.NewForEnumeration(Source);
+        return (WithSource(IdentifierName(scopedSourceName)), scopedSourceName);
+    }
+
     public TypeMappingBuildContext WithSource(ExpressionSyntax source) => new(source, ReferenceHandler, NameBuilder, SyntaxFactory);
 
     public TypeMappingBuildContext WithRefHandler(string refHandler) => WithRefHandler(IdentifierName(refHandler));

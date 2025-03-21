@@ -1,3 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 namespace Riok.Mapperly.Helpers;
 
 public class UniqueNameBuilder()
@@ -39,6 +42,18 @@ public class UniqueNameBuilder()
         return uniqueName;
     }
 
+    public string NewForEnumeration(ExpressionSyntax expression)
+    {
+        var name = expression switch
+        {
+            IdentifierNameSyntax identifier => ToCamelCase(Pluralizer.ToSingular(identifier.Identifier.Text)),
+            MemberAccessExpressionSyntax accessExpression => ToCamelCase(Pluralizer.ToSingular(accessExpression.Name.Identifier.Text)),
+            _ => null,
+        };
+
+        return New(name ?? "item");
+    }
+
     private void Reserve(IEnumerable<string> names) => _usedNames.AddRange(names);
 
     private bool Contains(string name)
@@ -50,5 +65,18 @@ public class UniqueNameBuilder()
             return _parentScope.Contains(name);
 
         return false;
+    }
+
+    [return: NotNullIfNotNull(nameof(name))]
+    private string? ToCamelCase(string? name)
+    {
+        if (name == null)
+            return null;
+
+        return name.Length switch
+        {
+            1 => "" + char.ToLowerInvariant(name[0]),
+            _ => char.ToLowerInvariant(name[0]) + name[1..],
+        };
     }
 }

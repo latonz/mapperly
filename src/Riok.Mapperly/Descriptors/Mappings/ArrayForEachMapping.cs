@@ -20,7 +20,6 @@ public class ArrayForEachMapping(
 ) : NewInstanceMethodMapping(sourceType, targetType)
 {
     private const string TargetVariableName = "target";
-    private const string LoopItemVariableName = "item";
     private const string LoopCounterName = "i";
 
     public override IEnumerable<StatementSyntax> BuildBody(TypeMappingBuildContext ctx)
@@ -36,7 +35,7 @@ public class ArrayForEachMapping(
         yield return ctx.SyntaxFactory.DeclareLocalVariable(loopCounterVariableName, IntLiteral(0));
 
         // target[i] = Map(item);
-        var (loopItemCtx, loopItemVariableName) = ctx.WithNewSource(LoopItemVariableName);
+        var (loopItemCtx, loopItemVariableName) = ctx.WithNewSourceForEnumeration();
         var convertedSourceItemExpression = elementMapping.Build(loopItemCtx.AddIndentation());
 
         var assignment = Assignment(

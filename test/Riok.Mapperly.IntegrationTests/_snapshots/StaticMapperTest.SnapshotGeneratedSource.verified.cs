@@ -57,9 +57,9 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
         {
             var target = new int[lists.Count][][];
             var i = 0;
-            foreach (var item in lists)
+            foreach (var list in lists)
             {
-                target[i] = MapToInt32ArrayArray(item);
+                target[i] = MapToInt32ArrayArray(list);
                 i++;
             }
             return target;

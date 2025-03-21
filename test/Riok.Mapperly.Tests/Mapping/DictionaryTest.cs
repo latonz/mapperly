@@ -303,9 +303,9 @@ public class DictionaryTest
                 """
                 var target = new global::B();
                 var targetDict = (global::System.Collections.Generic.IDictionary<string, string>)target.Values;
-                foreach (var item in source.Values)
+                foreach (var value in source.Values)
                 {
-                    targetDict[item.Key] = item.Value;
+                    targetDict[value.Key] = value.Value;
                 }
                 return target;
                 """

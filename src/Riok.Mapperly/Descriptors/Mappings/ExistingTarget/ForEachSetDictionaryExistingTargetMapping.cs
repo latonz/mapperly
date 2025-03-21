@@ -18,7 +18,6 @@ public class ForEachSetDictionaryExistingTargetMapping(
     INamedTypeSymbol? explicitCast
 ) : ObjectMemberExistingTargetMapping(collectionInfos.Source.Type, collectionInfos.Target.Type), IEnumerableMapping
 {
-    private const string LoopItemVariableName = "item";
     private const string ExplicitCastVariableName = "targetDict";
     private const string KeyPropertyName = nameof(KeyValuePair<object, object>.Key);
     private const string ValuePropertyName = nameof(KeyValuePair<object, object>.Value);
@@ -52,7 +51,7 @@ public class ForEachSetDictionaryExistingTargetMapping(
             yield return _capacitySetter.Build(ctx, target);
         }
 
-        var loopItemVariableName = ctx.NameBuilder.New(LoopItemVariableName);
+        var loopItemVariableName = ctx.NameBuilder.NewForEnumeration(ctx.Source);
 
         var convertedKeyExpression = keyMapping.Build(ctx.WithSource(MemberAccess(loopItemVariableName, KeyPropertyName)));
         var convertedValueExpression = valueMapping.Build(ctx.WithSource(MemberAccess(loopItemVariableName, ValuePropertyName)));

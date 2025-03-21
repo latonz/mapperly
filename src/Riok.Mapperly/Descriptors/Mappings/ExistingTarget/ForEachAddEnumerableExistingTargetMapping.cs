@@ -15,8 +15,6 @@ public class ForEachAddEnumerableExistingTargetMapping(
     string insertMethodName
 ) : ObjectMemberExistingTargetMapping(collectionInfos.Source.Type, collectionInfos.Target.Type), IEnumerableMapping
 {
-    private const string LoopItemVariableName = "item";
-
     private ICapacitySetter? _capacitySetter;
 
     public CollectionInfos CollectionInfos => collectionInfos;
@@ -35,7 +33,7 @@ public class ForEachAddEnumerableExistingTargetMapping(
             yield return _capacitySetter.Build(ctx, target);
         }
 
-        var (loopItemCtx, loopItemVariableName) = ctx.WithNewSource(LoopItemVariableName);
+        var (loopItemCtx, loopItemVariableName) = ctx.WithNewSourceForEnumeration();
         var convertedSourceItemExpression = elementMapping.Build(loopItemCtx);
         var addMethod = MemberAccess(target, insertMethodName);
         var body = ctx.SyntaxFactory.Invocation(addMethod, convertedSourceItemExpression);

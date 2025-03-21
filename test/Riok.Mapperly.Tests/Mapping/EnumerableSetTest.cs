@@ -73,9 +73,9 @@ public class EnumerableSetTest
             .HaveSingleMethodBody(
                 """
                 var target = new global::B();
-                foreach (var item in source.Values)
+                foreach (var value in source.Values)
                 {
-                    target.Values.Add(item);
+                    target.Values.Add(value);
                 }
                 return target;
                 """
@@ -101,9 +101,9 @@ public class EnumerableSetTest
                 {
                     target.Values.EnsureCapacity(sourceCount + target.Values.Count);
                 }
-                foreach (var item in source.Values)
+                foreach (var value in source.Values)
                 {
-                    target.Values.Add(item);
+                    target.Values.Add(value);
                 }
                 return target;
                 """
