@@ -28,11 +28,8 @@ public static class SourceEmitter
         var compilationUnitMembers = new List<MemberDeclarationSyntax>(2) { mapperClass };
 
 #if ROSLYN4_7_OR_GREATER
-        if (descriptor.UnsafeAccessors.Count > 0)
-        {
-            var unsafeAccessorClass = UnsafeAccessorEmitter.BuildUnsafeAccessorClass(ctx, descriptor, cancellationToken);
-            compilationUnitMembers.Add(unsafeAccessorClass);
-        }
+        var unsafeAccessorClasses = descriptor.UnsafeAccessorContext!.BuildSyntaxes(ctx, cancellationToken);
+        compilationUnitMembers.AddRange(unsafeAccessorClasses);
 #endif
 
         var compilationUnitMemberSyntaxList = List(compilationUnitMembers.SeparateByTrailingLineFeed(memberCtx.SyntaxFactory.Indentation));

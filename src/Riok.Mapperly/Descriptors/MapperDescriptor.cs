@@ -10,13 +10,13 @@ namespace Riok.Mapperly.Descriptors;
 
 public class MapperDescriptor
 {
-    private const string AccessorClassName = "UnsafeAccessor";
-
     private readonly MapperDeclaration _declaration;
     private readonly List<MethodMapping> _methodMappings = [];
-    private readonly List<IUnsafeAccessor> _unsafeAccessors = [];
 
     public bool Static { get; set; }
+
+    // TODO
+    public UnsafeAccessorContext? UnsafeAccessorContext { get; set; }
 
     public MapperDescriptor(MapperDeclaration declaration, UniqueNameBuilder nameBuilder, SupportedFeatures supportedFeatures)
     {
@@ -24,7 +24,6 @@ public class MapperDescriptor
         NameBuilder = nameBuilder;
         SupportedFeatures = supportedFeatures;
         Name = BuildName(declaration.Symbol);
-        UnsafeAccessorName = nameBuilder.New(AccessorClassName);
 
         if (!Symbol.ContainingNamespace.IsGlobalNamespace)
         {
@@ -38,8 +37,6 @@ public class MapperDescriptor
 
     public string? Namespace { get; }
 
-    public string UnsafeAccessorName { get; }
-
     public ClassDeclarationSyntax Syntax => _declaration.Syntax;
 
     public INamedTypeSymbol Symbol => _declaration.Symbol;
@@ -48,11 +45,7 @@ public class MapperDescriptor
 
     public IReadOnlyCollection<MethodMapping> MethodMappings => _methodMappings;
 
-    public IReadOnlyCollection<IUnsafeAccessor> UnsafeAccessors => _unsafeAccessors;
-
     public void AddMethodMappings(IReadOnlyCollection<MethodMapping> mappings) => _methodMappings.AddRange(mappings);
-
-    public void AddUnsafeAccessors(IReadOnlyCollection<IUnsafeAccessor> accessors) => _unsafeAccessors.AddRange(accessors);
 
     private string BuildName(INamedTypeSymbol symbol)
     {

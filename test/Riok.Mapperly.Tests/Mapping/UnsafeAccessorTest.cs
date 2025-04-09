@@ -19,6 +19,19 @@ public class UnsafeAccessorTest
     }
 
     [Fact]
+    public Task PrivatePropertyInGenericClass()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            "partial B<int> Map(A<int> source);",
+            TestSourceBuilderOptions.WithMemberVisibility(MemberVisibility.All),
+            "class A<T> where T : struct { private T _value { get; set; } }",
+            "class B<T> where T : struct { private T _value { get; set; } }"
+        );
+
+        return TestHelper.VerifyGenerator(source);
+    }
+
+    [Fact]
     public Task ProtectedProperty()
     {
         var source = TestSourceBuilder.MapperWithBodyAndTypes(
@@ -88,6 +101,23 @@ public class UnsafeAccessorTest
             "class A { private C? nested { get; set; } }",
             "class B { private int value { get; set; } }",
             "class C { private int? value { get; set; } }"
+        );
+
+        return TestHelper.VerifyGenerator(source);
+    }
+
+    [Fact]
+    public Task PrivateNestedNullablePropertyInGenericClass()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            [MapProperty("nested.value", "value")]
+            partial B<int> Map(A<int> source);
+            """,
+            TestSourceBuilderOptions.WithMemberVisibility(MemberVisibility.All),
+            "class A<T> where T : struct { private C<T>? nested { get; set; } }",
+            "class B<T> where T : struct { private T? value { get; set; } }",
+            "class C<T> where T : struct { private T value { get; set; } }"
         );
 
         return TestHelper.VerifyGenerator(source);
@@ -243,6 +273,19 @@ public class UnsafeAccessorTest
             TestSourceBuilderOptions.WithMemberVisibility(MemberVisibility.All),
             "class A { private int value }",
             "class B { private int value }"
+        );
+
+        return TestHelper.VerifyGenerator(source);
+    }
+
+    [Fact]
+    public Task PrivateFieldInGenericClass()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            "partial B<int> Map(A<int> source);",
+            TestSourceBuilderOptions.WithMemberVisibility(MemberVisibility.All),
+            "class A<T> where T : struct { private T value; }",
+            "class B<T> where T : struct { private T value; }"
         );
 
         return TestHelper.VerifyGenerator(source);
@@ -501,6 +544,24 @@ public class UnsafeAccessorTest
             "class B { private B(int _intValue) {} private string _stringValue { get; set; } }"
         );
 
+        return TestHelper.VerifyGenerator(source);
+    }
+
+    // TODO add properties and fields in generic classes and with different type arguments, add integration test with List<int>
+    [Fact]
+    public Task PrivateCtorCustomGenericClass()
+    {
+        var source = TestSourceBuilder.Mapping(
+            "A",
+            "B<Guid>",
+            TestSourceBuilderOptions.Default with
+            {
+                IncludedMembers = MemberVisibility.All,
+                IncludedConstructors = MemberVisibility.All,
+            },
+            "class A { public string Value { get; set; } }",
+            "class B<T> where T : struct { private A(T value) {} }"
+        );
         return TestHelper.VerifyGenerator(source);
     }
 

@@ -17,7 +17,10 @@ namespace Riok.Mapperly.Descriptors.UnsafeAccess;
 /// public extern static int GetValue(this global::MyClass source);
 /// </code>
 /// </summary>
-public class UnsafeFieldAccessor(IFieldSymbol symbol, string methodName) : IUnsafeAccessor, IMemberSetter, IMemberGetter
+/// <param name="symbol">The symbol of the property.</param>
+/// <param name="className">The name of the accessor class.</param>
+/// <param name="methodName">The name of the accessor method.</param>
+public class UnsafeFieldAccessor(IFieldSymbol symbol, string className, string methodName) : IUnsafeAccessor, IMemberSetter, IMemberGetter
 {
     private const string DefaultTargetParameterName = "target";
 
@@ -28,11 +31,17 @@ public class UnsafeFieldAccessor(IFieldSymbol symbol, string methodName) : IUnsa
         var nameBuilder = ctx.NameBuilder.NewScope();
         var targetName = nameBuilder.New(DefaultTargetParameterName);
 
-        var target = Parameter(symbol.ContainingType.FullyQualifiedIdentifierName(), targetName, true);
+        var fieldSymbol = symbol.ContainingType.IsGenericType ? symbol.OriginalDefinition : symbol;
+
+        var target = Parameter(
+            fieldSymbol.ContainingType.FullyQualifiedIdentifierName(),
+            targetName,
+            !fieldSymbol.ContainingType.IsGenericType
+        );
 
         var parameters = ParameterList(CommaSeparatedList(target));
-        var attribute = ctx.SyntaxFactory.UnsafeAccessorAttribute(UnsafeAccessorType.Field, symbol.Name);
-        var returnType = RefType(IdentifierName(symbol.Type.FullyQualifiedIdentifierName()).AddTrailingSpace())
+        var attribute = ctx.SyntaxFactory.UnsafeAccessorAttribute(UnsafeAccessorType.Field, fieldSymbol.Name);
+        var returnType = RefType(IdentifierName(fieldSymbol.Type.FullyQualifiedIdentifierName()).AddTrailingSpace())
             .WithRefKeyword(Token(TriviaList(), SyntaxKind.RefKeyword, TriviaList(Space)));
 
         return ctx.SyntaxFactory.PublicStaticExternMethod(returnType, methodName, parameters, [attribute]);
@@ -43,8 +52,16 @@ public class UnsafeFieldAccessor(IFieldSymbol symbol, string methodName) : IUnsa
         if (baseAccess == null)
             throw new ArgumentNullException(nameof(baseAccess));
 
-        ExpressionSyntax method = nullConditional ? ConditionalAccess(baseAccess, methodName) : MemberAccess(baseAccess, methodName);
-        return InvocationWithoutIndention(method);
+        if (!symbol.ContainingType.IsGenericType)
+        {
+            ExpressionSyntax method = nullConditional ? ConditionalAccess(baseAccess, methodName) : MemberAccess(baseAccess, methodName);
+            return InvocationWithoutIndention(method);
+        }
+
+        // TODO null conditional
+        var genericClassName = GenericName(className).WithTypeArgumentList(TypeArgumentList(symbol.ContainingType.TypeArguments));
+        return InvocationExpression(MemberAccess(genericClassName, methodName))
+            .WithArgumentList(ArgumentListWithoutIndention([baseAccess]));
     }
 
     public ExpressionSyntax BuildAssignment(ExpressionSyntax? baseAccess, ExpressionSyntax valueToAssign, bool coalesceAssignment = false)

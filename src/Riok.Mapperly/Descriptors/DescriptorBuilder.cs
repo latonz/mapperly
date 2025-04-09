@@ -45,7 +45,7 @@ public class DescriptorBuilder
         _symbolAccessor = symbolAccessor;
         _types = compilationContext.Types;
         _mappingBodyBuilder = new MappingBodyBuilder(_mappings);
-        _unsafeAccessorContext = new UnsafeAccessorContext(_methodNameBuilder, symbolAccessor, _mapperDescriptor.UnsafeAccessorName);
+        _unsafeAccessorContext = new UnsafeAccessorContext(_methodNameBuilder, symbolAccessor);
 
         var attributeAccessor = new AttributeDataAccessor(symbolAccessor);
         var configurationReader = new MapperConfigurationReader(
@@ -223,7 +223,8 @@ public class DescriptorBuilder
     private void AddAccessorsToDescriptor()
     {
         // add generated accessors to the mapper
-        _mapperDescriptor.AddUnsafeAccessors(_unsafeAccessorContext.Accessors);
+        // TODO
+        _mapperDescriptor.UnsafeAccessorContext = _unsafeAccessorContext;
     }
 
     private void AddUserMapping(IUserMapping mapping, bool ignoreDuplicates, bool named)

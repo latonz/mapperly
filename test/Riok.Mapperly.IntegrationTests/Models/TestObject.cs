@@ -146,6 +146,8 @@ namespace Riok.Mapperly.IntegrationTests.Models
 
         private int PrivateValue { get; set; }
 
+        private TestGenericObject<Guid> GenericPrivateValue { get; set; }
+
         public int SumComponent1 { get; set; }
 
         public int SumComponent2 { get; set; }
