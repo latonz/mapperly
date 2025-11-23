@@ -28,7 +28,9 @@ public class QueryableProjectionMapping(
         
         // Build the delegate mapping with a temporary context to extract lambda parameter names
         // This is needed to avoid conflicts when generating the queryable projection lambda parameter
-        var (tempCtx, tempSourceName) = ctx.WithNewScopedSource("__temp");
+        // Note: We build the delegate mapping twice (once to extract lambda names, once for real).
+        // This is necessary because we need to know which names to avoid before creating the lambda context.
+        var (tempCtx, _) = ctx.WithNewScopedSource("__temp");
         var tempDelegateSyntax = delegateMapping.Build(tempCtx);
         var lambdaParameterNames = ExtractLambdaParameterNames(tempDelegateSyntax);
         foreach (var name in lambdaParameterNames)
