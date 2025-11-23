@@ -142,14 +142,7 @@ public class UserImplementedInlinedExpressionMapping(
             return body;
 
         return body.ReplaceNodes(identifiers, (original, _) =>
-        {
-            var oldName = original.Identifier.Text;
-            if (renamings.TryGetValue(oldName, out var newName))
-            {
-                return original.WithIdentifier(Identifier(newName));
-            }
-            return original;
-        });
+            original.WithIdentifier(Identifier(renamings[original.Identifier.Text])));
     }
 
     private bool IsSourceParameterHidden(SyntaxNode node)
