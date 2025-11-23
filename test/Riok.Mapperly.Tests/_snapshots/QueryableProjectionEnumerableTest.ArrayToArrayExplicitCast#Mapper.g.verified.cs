@@ -9,9 +9,9 @@ public partial class Mapper
 #nullable disable
         return global::System.Linq.Queryable.Select(
             source,
-            x1 => new global::B()
+            x => new global::B()
             {
-                Values = global::System.Linq.Enumerable.ToArray(global::System.Linq.Enumerable.Select(x1.Values, x2 => (int)x2)),
+                Values = global::System.Linq.Enumerable.ToArray(global::System.Linq.Enumerable.Select(x.Values, x1 => (int)x1)),
             }
         );
 #nullable enable

@@ -1,5 +1,7 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Riok.Mapperly.Descriptors.Mappings.UserMappings;
 
@@ -23,21 +25,10 @@ public class UserImplementedInlinedExpressionMapping(
     public bool? Default => userMapping.Default;
     public bool IsExternal => userMapping.IsExternal;
 
-    /// <summary>
-    /// Gets all lambda parameter names used in the mapping body.
-    /// These names should be avoided when generating new lambda parameters to prevent shadowing.
-    /// </summary>
-    public IEnumerable<string> GetLambdaParameterNames()
-    {
-        return mappingBody.DescendantNodes()
-            .SelectMany(ExtractOverwrittenIdentifiers)
-            .Select(token => token.Text)
-            .Distinct();
-    }
-
     public override ExpressionSyntax Build(TypeMappingBuildContext ctx)
     {
         var body = InlineUserMappings(ctx, mappingBody);
+        body = RenameLambdaParameters(ctx, body);
         return ReplaceSource(ctx, body);
     }
 
@@ -65,6 +56,100 @@ public class UserImplementedInlinedExpressionMapping(
             .OfType<IdentifierNameSyntax>()
             .Where(x => x.Identifier.Text.Equals(sourceParameter.Identifier.Text, StringComparison.Ordinal));
         return body.ReplaceNodes(identifierNodes, (n, _) => ctx.Source.WithTriviaFrom(n));
+    }
+
+    private ExpressionSyntax RenameLambdaParameters(TypeMappingBuildContext ctx, ExpressionSyntax body)
+    {
+        // Find all lambda expressions and rename their parameters to ensure uniqueness
+        var lambdas = body.DescendantNodesAndSelf().OfType<LambdaExpressionSyntax>().ToList();
+        if (lambdas.Count == 0)
+            return body;
+
+        // Build a mapping of old parameter names to new unique names
+        var parameterRenamings = new Dictionary<LambdaExpressionSyntax, Dictionary<string, string>>();
+        
+        foreach (var lambda in lambdas)
+        {
+            var renamings = new Dictionary<string, string>();
+            
+            if (lambda is SimpleLambdaExpressionSyntax simpleLambda)
+            {
+                var oldName = simpleLambda.Parameter.Identifier.Text;
+                var newName = ctx.NameBuilder.New(oldName);
+                renamings[oldName] = newName;
+            }
+            else if (lambda is ParenthesizedLambdaExpressionSyntax parenthesizedLambda)
+            {
+                foreach (var parameter in parenthesizedLambda.ParameterList.Parameters)
+                {
+                    var oldName = parameter.Identifier.Text;
+                    var newName = ctx.NameBuilder.New(oldName);
+                    renamings[oldName] = newName;
+                }
+            }
+            
+            if (renamings.Count > 0)
+            {
+                parameterRenamings[lambda] = renamings;
+            }
+        }
+
+        // Replace lambda expressions with renamed parameters
+        body = body.ReplaceNodes(lambdas, (originalLambda, _) =>
+        {
+            if (!parameterRenamings.TryGetValue(originalLambda, out var renamings))
+                return originalLambda;
+
+            LambdaExpressionSyntax renamedLambda;
+            
+            if (originalLambda is SimpleLambdaExpressionSyntax simpleLambda)
+            {
+                var oldName = simpleLambda.Parameter.Identifier.Text;
+                var newName = renamings[oldName];
+                var newParameter = simpleLambda.Parameter.WithIdentifier(Identifier(newName));
+                var newBody = RenameIdentifiersInLambdaBody(simpleLambda.Body, renamings);
+                renamedLambda = simpleLambda.WithParameter(newParameter).WithBody(newBody);
+            }
+            else if (originalLambda is ParenthesizedLambdaExpressionSyntax parenthesizedLambda)
+            {
+                var newParameters = parenthesizedLambda.ParameterList.Parameters
+                    .Select(p => p.WithIdentifier(Identifier(renamings[p.Identifier.Text])))
+                    .ToArray();
+                var newParameterList = parenthesizedLambda.ParameterList.WithParameters(SeparatedList(newParameters));
+                var newBody = RenameIdentifiersInLambdaBody(parenthesizedLambda.Body, renamings);
+                renamedLambda = parenthesizedLambda.WithParameterList(newParameterList).WithBody(newBody);
+            }
+            else
+            {
+                return originalLambda;
+            }
+
+            return renamedLambda;
+        });
+
+        return body;
+    }
+
+    private static CSharpSyntaxNode RenameIdentifiersInLambdaBody(CSharpSyntaxNode body, Dictionary<string, string> renamings)
+    {
+        // Find all identifier references in the lambda body and rename them
+        var identifiers = body.DescendantNodesAndSelf()
+            .OfType<IdentifierNameSyntax>()
+            .Where(id => renamings.ContainsKey(id.Identifier.Text))
+            .ToList();
+
+        if (identifiers.Count == 0)
+            return body;
+
+        return body.ReplaceNodes(identifiers, (original, _) =>
+        {
+            var oldName = original.Identifier.Text;
+            if (renamings.TryGetValue(oldName, out var newName))
+            {
+                return original.WithIdentifier(Identifier(newName));
+            }
+            return original;
+        });
     }
 
     private bool IsSourceParameterHidden(SyntaxNode node)

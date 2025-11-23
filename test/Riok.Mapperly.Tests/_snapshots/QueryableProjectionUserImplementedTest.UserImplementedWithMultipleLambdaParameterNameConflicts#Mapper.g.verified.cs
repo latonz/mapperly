@@ -9,8 +9,8 @@ public partial class Mapper
 #nullable disable
         return global::System.Linq.Queryable.Select(
             q,
-            x1 => new global::BlogDto(
-                global::System.Linq.Enumerable.Count(global::System.Linq.Enumerable.Where(x1.Posts, x => x.Id > 0), x => x.Id == x1.Posts.Count)
+            x => new global::BlogDto(
+                global::System.Linq.Enumerable.Count(global::System.Linq.Enumerable.Where(x.Posts, x1=> x1.Id > 0), x2=> x2.Id == x.Posts.Count)
             )
         );
 #nullable enable

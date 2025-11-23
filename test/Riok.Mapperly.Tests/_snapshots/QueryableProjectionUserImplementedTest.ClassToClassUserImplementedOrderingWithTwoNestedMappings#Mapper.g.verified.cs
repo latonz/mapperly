@@ -9,12 +9,12 @@ public partial class Mapper
 #nullable disable
         return global::System.Linq.Queryable.Select(
             source,
-            x1 => new global::B()
+            x => new global::B()
             {
-                StringValue = x1.StringValue + "-mod",
-                NestedValues = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.Select(global::System.Linq.Enumerable.OrderBy(x1.NestedValues, x => x.Value), x => new global::D()
+                StringValue = x.StringValue + "-mod",
+                NestedValues = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.Select(global::System.Linq.Enumerable.OrderBy(x.NestedValues, x1=> x1.Value), x2=> new global::D()
                 {
-                    Value = x.Value + "-mod",
+                    Value = x2.Value + "-mod",
                 })),
             }
         );

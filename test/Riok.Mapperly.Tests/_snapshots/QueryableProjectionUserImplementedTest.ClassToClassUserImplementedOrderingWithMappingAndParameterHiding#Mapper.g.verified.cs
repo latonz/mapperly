@@ -9,10 +9,10 @@ public partial class Mapper
 #nullable disable
         return global::System.Linq.Queryable.Select(
             source,
-            x1 => new global::B()
+            x => new global::B()
             {
-                StringValue = x1.StringValue,
-                NestedValues = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.Select(global::System.Linq.Enumerable.OrderBy(x1.NestedValues, x => x.Value), v => new global::D()
+                StringValue = x.StringValue,
+                NestedValues = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.Select(global::System.Linq.Enumerable.OrderBy(x.NestedValues, x1=> x1.Value), v=> new global::D()
                 {
                     Value = v.Value,
                 })),
