@@ -292,4 +292,44 @@ public class QueryableProjectionUserImplementedTest
 
         return TestHelper.VerifyGenerator(source);
     }
+
+    [Fact]
+    public Task UserImplementedWithLambdaParameterNameConflict()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            public static partial IQueryable<BlogDto> ProjectToDto(this IQueryable<Blog> q);
+
+            [MapPropertyFromSource(nameof(BlogDto.Id), Use = nameof(MapId))]
+            public static partial BlogDto BlogMap(Blog blog);
+
+            private static int MapId(Blog blog) => blog.Posts.Count(x => x.Id == blog.Posts.Count);
+            """,
+            "public record Blog(List<Post> Posts);",
+            "public record Post(int Id);",
+            "public record BlogDto(int Id);"
+        );
+
+        return TestHelper.VerifyGenerator(source);
+    }
+
+    [Fact]
+    public Task UserImplementedWithMultipleLambdaParameterNameConflicts()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            public static partial IQueryable<BlogDto> ProjectToDto(this IQueryable<Blog> q);
+
+            [MapPropertyFromSource(nameof(BlogDto.Id), Use = nameof(MapId))]
+            public static partial BlogDto BlogMap(Blog blog);
+
+            private static int MapId(Blog blog) => blog.Posts.Where(x => x.Id > 0).Count(x => x.Id == blog.Posts.Count);
+            """,
+            "public record Blog(List<Post> Posts);",
+            "public record Post(int Id);",
+            "public record BlogDto(int Id);"
+        );
+
+        return TestHelper.VerifyGenerator(source);
+    }
 }

@@ -23,6 +23,18 @@ public class UserImplementedInlinedExpressionMapping(
     public bool? Default => userMapping.Default;
     public bool IsExternal => userMapping.IsExternal;
 
+    /// <summary>
+    /// Gets all lambda parameter names used in the mapping body.
+    /// These names should be avoided when generating new lambda parameters to prevent shadowing.
+    /// </summary>
+    public IEnumerable<string> GetLambdaParameterNames()
+    {
+        return mappingBody.DescendantNodes()
+            .SelectMany(ExtractOverwrittenIdentifiers)
+            .Select(token => token.Text)
+            .Distinct();
+    }
+
     public override ExpressionSyntax Build(TypeMappingBuildContext ctx)
     {
         var body = InlineUserMappings(ctx, mappingBody);

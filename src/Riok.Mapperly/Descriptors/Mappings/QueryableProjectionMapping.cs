@@ -25,6 +25,17 @@ public class QueryableProjectionMapping(
         // #nullable disable
         // return System.Linq.Enumerable.Select(source, x => ...);
         // #nullable enable
+        
+        // Build the delegate mapping with a temporary context to extract lambda parameter names
+        // This is needed to avoid conflicts when generating the queryable projection lambda parameter
+        var (tempCtx, tempSourceName) = ctx.WithNewScopedSource("__temp");
+        var tempDelegateSyntax = delegateMapping.Build(tempCtx);
+        var lambdaParameterNames = ExtractLambdaParameterNames(tempDelegateSyntax);
+        foreach (var name in lambdaParameterNames)
+        {
+            ctx.NameBuilder.Reserve(name);
+        }
+        
         var (lambdaCtx, lambdaSourceName) = ctx.WithNewScopedSource();
 
         var delegateMappingSyntax = delegateMapping.Build(lambdaCtx);
@@ -38,5 +49,28 @@ public class QueryableProjectionMapping(
             .Insert(1, Nullable(true, !supportsNullableAttributes));
         returnStatement = returnStatement.WithLeadingTrivia(leadingTrivia).WithTrailingTrivia(trailingTrivia);
         return [returnStatement];
+    }
+
+    private static IEnumerable<string> ExtractLambdaParameterNames(ExpressionSyntax expression)
+    {
+        var lambdas = expression.DescendantNodesAndSelf().OfType<LambdaExpressionSyntax>();
+        var names = new HashSet<string>();
+        
+        foreach (var lambda in lambdas)
+        {
+            if (lambda is SimpleLambdaExpressionSyntax simpleLambda)
+            {
+                names.Add(simpleLambda.Parameter.Identifier.Text);
+            }
+            else if (lambda is ParenthesizedLambdaExpressionSyntax parenthesizedLambda)
+            {
+                foreach (var parameter in parenthesizedLambda.ParameterList.Parameters)
+                {
+                    names.Add(parameter.Identifier.Text);
+                }
+            }
+        }
+        
+        return names;
     }
 }
