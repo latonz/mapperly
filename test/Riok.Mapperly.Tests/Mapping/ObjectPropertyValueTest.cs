@@ -847,7 +847,7 @@ public class ObjectPropertyValueTest
     }
 
     [Fact]
-    public void StringToInitOnlyPathShouldDiagnostic()
+    public void StringToInitOnlyPath()
     {
         var source = TestSourceBuilder.MapperWithBodyAndTypes(
             """[MapValue("Nested.Value", "fooBar")] partial B Map(A source);""",
@@ -857,17 +857,15 @@ public class ObjectPropertyValueTest
         );
 
         TestHelper
-            .GenerateMapper(source, TestHelperOptions.AllowDiagnostics)
+            .GenerateMapper(source)
             .Should()
-            .HaveDiagnostic(DiagnosticDescriptors.InitOnlyMemberDoesNotSupportPaths, "Cannot map to init only member path B.Nested.Value")
-            .HaveDiagnostic(
-                DiagnosticDescriptors.SourceMemberNotFound,
-                "The member Nested on the mapping target type B was not found on the mapping source type A"
-            )
-            .HaveAssertedAllDiagnostics()
             .HaveSingleMethodBody(
                 """
-                var target = new global::B();
+                var target = new global::B()
+                {
+                    Nested = new global::C(),
+                };
+                target.Nested.Value = "fooBar";
                 return target;
                 """
             );

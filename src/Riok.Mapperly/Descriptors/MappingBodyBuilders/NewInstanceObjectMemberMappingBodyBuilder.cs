@@ -5,6 +5,7 @@ using Riok.Mapperly.Descriptors.Constructors;
 using Riok.Mapperly.Descriptors.MappingBodyBuilders.BuilderContext;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.MemberMappings;
+using Riok.Mapperly.Descriptors.Mappings.MemberMappings.SourceValue;
 using Riok.Mapperly.Diagnostics;
 using Riok.Mapperly.Symbols.Members;
 
@@ -108,9 +109,23 @@ public static class NewInstanceObjectMemberMappingBodyBuilder
             : ctx.EnumerateUnmappedTargetMembers().Where(x => x.CanOnlySetViaInitializer()).ToArray();
         foreach (var targetMember in initOnlyTargetMembers)
         {
-            if (ctx.TryMatchInitOnlyMember(targetMember, out var memberInfo))
+            if (ctx.TryMatchInitOnlyMember(targetMember, out var memberInfo, out var hasPathConfigs))
             {
                 BuildInitMemberMapping(ctx, memberInfo);
+                continue;
+            }
+
+            // Path configs exist for this init member (e.g. [MapProperty("Value", "Nested.Value")] where Nested is init-only).
+            // Initialize the member with a new instance in the object initializer
+            // so path assignments can be applied after construction.
+            if (hasPathConfigs)
+            {
+                if (targetMember.CanOnlySetViaInitializer())
+                {
+                    TryBuildDefaultInitMemberMapping(ctx, targetMember);
+                }
+
+                // Don't report "not mapped" errors - path configs will be handled in the regular member phase.
                 continue;
             }
 
@@ -150,6 +165,32 @@ public static class NewInstanceObjectMemberMappingBodyBuilder
             return;
 
         ctx.AddInitMemberMapping(memberAssignmentMapping);
+    }
+
+    /// <summary>
+    /// Tries to build a default init member mapping that initializes a member
+    /// with a new instance (e.g. <c>Nested = new C()</c>) so that path assignments
+    /// to its descendants can be applied after construction.
+    /// </summary>
+    private static bool TryBuildDefaultInitMemberMapping(
+        INewInstanceBuilderContext<INewInstanceObjectMemberMapping> ctx,
+        IMappableMember targetMember
+    )
+    {
+        var memberType = targetMember.Type;
+        if (!ctx.BuilderContext.InstanceConstructors.TryBuild(ctx.BuilderContext.Source, memberType, out var ctor))
+        {
+            ctx.BuilderContext.ReportDiagnostic(DiagnosticDescriptors.NoParameterlessConstructorFound, memberType);
+            return false;
+        }
+
+        var targetPath = new NonEmptyMemberPath(ctx.Mapping.TargetType, [targetMember]);
+        var targetSetter = targetPath.BuildSetter(ctx.BuilderContext);
+        var sourceValue = new NewInstanceSourceValue(ctor);
+        var memberInfo = new MemberMappingInfo(null, targetPath);
+        var mapping = new MemberAssignmentMapping(targetSetter, sourceValue, memberInfo);
+        ctx.AddInitMemberMapping(mapping);
+        return true;
     }
 
     private static bool TryBuildConstructorMapping(

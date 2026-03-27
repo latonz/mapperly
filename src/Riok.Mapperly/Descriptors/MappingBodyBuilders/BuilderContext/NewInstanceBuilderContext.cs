@@ -28,8 +28,14 @@ public class NewInstanceBuilderContext<T>(MappingBuilderContext builderContext, 
         MappingAdded(mapping.MemberInfo);
     }
 
-    public bool TryMatchInitOnlyMember(IMappableMember targetMember, [NotNullWhen(true)] out MemberMappingInfo? memberInfo)
+    public bool TryMatchInitOnlyMember(
+        IMappableMember targetMember,
+        [NotNullWhen(true)] out MemberMappingInfo? memberInfo,
+        out bool hasPathConfigs
+    )
     {
+        hasPathConfigs = false;
+
         if (TryMatchMember(targetMember, out memberInfo))
             return true;
 

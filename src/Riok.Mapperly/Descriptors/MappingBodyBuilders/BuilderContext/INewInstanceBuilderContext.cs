@@ -15,7 +15,11 @@ public interface INewInstanceBuilderContext<out T> : IMembersBuilderContext<T>
 {
     bool TryMatchParameter(IParameterSymbol parameter, [NotNullWhen(true)] out MemberMappingInfo? memberInfo);
 
-    bool TryMatchInitOnlyMember(IMappableMember targetMember, [NotNullWhen(true)] out MemberMappingInfo? memberInfo);
+    bool TryMatchInitOnlyMember(
+        IMappableMember targetMember,
+        [NotNullWhen(true)] out MemberMappingInfo? memberInfo,
+        out bool hasPathConfigs
+    );
 
     void AddConstructorParameterMapping(ConstructorParameterMapping mapping);
 

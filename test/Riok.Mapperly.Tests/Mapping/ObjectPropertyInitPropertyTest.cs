@@ -521,4 +521,109 @@ public class ObjectPropertyInitPropertyTest
             )
             .HaveAssertedAllDiagnostics();
     }
+
+    [Fact]
+    public void InitOnlyPropertyWithPathToSettableDescendant()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """[MapProperty("Value", "Nested.Value")] public partial B Map(A source);""",
+            "class A { public int Value { get; set; } }",
+            "class B { public C? Nested { get; init; } }",
+            "class C { public int Value { get; set; } }"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B()
+                {
+                    Nested = new global::C(),
+                };
+                target.Nested.Value = source.Value;
+                return target;
+                """
+            );
+    }
+
+    [Fact]
+    public void InitOnlyPropertyWithPathToSettableDescendantNonNullable()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """[MapProperty("Value", "Nested.Value")] public partial B Map(A source);""",
+            "class A { public int Value { get; set; } }",
+            "class B { public C Nested { get; init; } }",
+            "class C { public int Value { get; set; } }"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B()
+                {
+                    Nested = new global::C(),
+                };
+                target.Nested.Value = source.Value;
+                return target;
+                """
+            );
+    }
+
+    [Fact]
+    public void InitOnlyPropertyWithMultiplePathsToSettableDescendants()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            [MapProperty("Value1", "Nested.Value1")]
+            [MapProperty("Value2", "Nested.Value2")]
+            public partial B Map(A source);
+            """,
+            "class A { public int Value1 { get; set; } public string Value2 { get; set; } }",
+            "class B { public C Nested { get; init; } }",
+            "class C { public int Value1 { get; set; } public string Value2 { get; set; } }"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B()
+                {
+                    Nested = new global::C(),
+                };
+                target.Nested.Value1 = source.Value1;
+                target.Nested.Value2 = source.Value2;
+                return target;
+                """
+            );
+    }
+
+    [Fact]
+    public void RequiredPropertyWithPathToSettableDescendant()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """[MapProperty("Value", "Nested.Value")] public partial B Map(A source);""",
+            "class A { public int Value { get; set; } }",
+            "class B { public required C Nested { get; set; } }",
+            "class C { public int Value { get; set; } }"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B()
+                {
+                    Nested = new global::C(),
+                };
+                target.Nested.Value = source.Value;
+                return target;
+                """
+            );
+    }
 }

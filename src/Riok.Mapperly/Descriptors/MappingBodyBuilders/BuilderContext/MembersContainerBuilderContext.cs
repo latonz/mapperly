@@ -92,6 +92,11 @@ public class MembersContainerBuilderContext<T>(MappingBuilderContext builderCont
             if (!nullablePath.Member.CanSet)
                 continue;
 
+            // Skip init-only members - they cannot be assigned after construction.
+            // In new instance contexts, they are initialized in the object initializer instead.
+            if (nullablePath.Member.IsInitOnly)
+                continue;
+
             if (_initializedNullableTargetPaths.Contains((Mapping, nullablePath)))
                 continue;
 

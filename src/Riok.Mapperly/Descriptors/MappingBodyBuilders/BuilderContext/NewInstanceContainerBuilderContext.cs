@@ -29,30 +29,29 @@ public class NewInstanceContainerBuilderContext<T>(MappingBuilderContext builder
         MappingAdded(mapping.MemberInfo);
     }
 
-    public bool TryMatchInitOnlyMember(IMappableMember targetMember, [NotNullWhen(true)] out MemberMappingInfo? memberInfo)
+    public bool TryMatchInitOnlyMember(
+        IMappableMember targetMember,
+        [NotNullWhen(true)] out MemberMappingInfo? memberInfo,
+        out bool hasPathConfigs
+    )
     {
+        hasPathConfigs = false;
+
         if (TryMatchMember(targetMember, out memberInfo))
             return true;
 
-        if (TryGetMemberValueConfigs(targetMember.Name, false, out var valueConfigs))
+        // Path configs exist for this init member.
+        // Don't reject: the member will be initialized with a new instance in the initializer,
+        // and the path configs will be handled as regular member assignments after construction.
+        if (TryGetMemberValueConfigs(targetMember.Name, false, out _))
         {
-            BuilderContext.ReportDiagnostic(
-                DiagnosticDescriptors.InitOnlyMemberDoesNotSupportPaths,
-                Mapping.TargetType,
-                valueConfigs[0].Target.FullName
-            );
-            ConsumeMemberConfig(valueConfigs[0]);
+            hasPathConfigs = true;
             return false;
         }
 
-        if (TryGetMemberConfigs(targetMember.Name, false, out var configs))
+        if (TryGetMemberConfigs(targetMember.Name, false, out _))
         {
-            BuilderContext.ReportDiagnostic(
-                DiagnosticDescriptors.InitOnlyMemberDoesNotSupportPaths,
-                Mapping.TargetType,
-                configs[0].Target.FullName
-            );
-            ConsumeMemberConfig(configs[0]);
+            hasPathConfigs = true;
             return false;
         }
 

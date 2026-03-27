@@ -8,34 +8,15 @@
 }
 */
  : (11,4)-(11,81),
-      Message: Cannot map to init only member path B.Nested.Value,
-      Severity: Error,
-      Descriptor: {
-        Id: RMG016,
-        Title: Init only member cannot handle target paths,
-        MessageFormat: Cannot map to init only member path {0}.{1},
-        Category: Mapper,
-        DefaultSeverity: Error,
-        IsEnabledByDefault: true
-      }
-    },
-    {
-      Location: /*
-{
-    [MapProperty("NestedValue", "Nested.Value")] private partial B Map(A source);
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-}
-*/
- : (11,4)-(11,81),
-      Message: The member Nested on the mapping target type B was not found on the mapping source type A,
-      Severity: Warning,
+      Message: Cannot map from A.NestedValue to init only member path B.Nested.Value,
+      Severity: Info,
       WarningLevel: 1,
       Descriptor: {
-        Id: RMG012,
-        Title: Source member was not found for target member,
-        MessageFormat: The member {0} on the mapping target type {1} was not found on the mapping source type {2},
+        Id: RMG015,
+        Title: Cannot map to init only member path,
+        MessageFormat: Cannot map from {0} to init only member path {1},
         Category: Mapper,
-        DefaultSeverity: Warning,
+        DefaultSeverity: Info,
         IsEnabledByDefault: true
       }
     },
@@ -54,27 +35,6 @@
         Id: RMG020,
         Title: Source member is not mapped to any target member,
         MessageFormat: The member {0} on the mapping source type {1} is not mapped to any member on the mapping target type {2},
-        Category: Mapper,
-        DefaultSeverity: Warning,
-        IsEnabledByDefault: true
-      }
-    },
-    {
-      Location: /*
-{
-    [MapProperty("NestedValue", "Nested.Value")] private partial B Map(A source);
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-}
-*/
- : (11,4)-(11,81),
-      Message: No members are mapped in the object mapping from A to B,
-      Severity: Warning,
-      WarningLevel: 1,
-      Descriptor: {
-        Id: RMG066,
-        Title: No members are mapped in an object mapping,
-        HelpLink: https://localhost:3000/docs/configuration/analyzer-diagnostics/RMG066,
-        MessageFormat: No members are mapped in the object mapping from {0} to {1},
         Category: Mapper,
         DefaultSeverity: Warning,
         IsEnabledByDefault: true

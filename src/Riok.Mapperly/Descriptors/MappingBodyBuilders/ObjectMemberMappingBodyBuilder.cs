@@ -106,7 +106,17 @@ public static class ObjectMemberMappingBodyBuilder
 
         // a target member path part is init only
         var noInitOnlyPath = allowInitOnlyMember ? targetMemberPath.ObjectPath : targetMemberPath.Path;
-        if (noInitOnlyPath.Any(p => p.IsInitOnly))
+
+        // For new instance mappings, the first member in the object path can be init-only
+        // because it is initialized in the object initializer.
+        // Path assignments to its descendants are valid after construction.
+        var initOnlyCheckPath = noInitOnlyPath;
+        if (ctx.Mapping is INewInstanceObjectMemberMapping && targetMemberPath.Path.Count > 1 && targetMemberPath.Path[0].IsInitOnly)
+        {
+            initOnlyCheckPath = initOnlyCheckPath.Skip(1);
+        }
+
+        if (initOnlyCheckPath.Any(p => p.IsInitOnly))
         {
             if (ctx.HasDuplicatedMemberConfig(targetMemberPath))
             {

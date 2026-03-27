@@ -23,6 +23,20 @@ partial CarDto Map(Car car);
 Unflattening is not automatically configured by Mapperly and needs to be configured manually via `MapPropertyAttribute`.
 :::
 
+## Unflattening into `init` / `required` members
+
+Manual unflattening can target descendants of `init` / `required` members as long as the final member in the target path is settable.
+Mapperly initializes the root member in the object initializer and then assigns the descendant member.
+
+```csharp
+[MapProperty(nameof(A.Value), nameof(B.Nested) + "." + nameof(C.Value))]
+partial B Map(A source);
+
+public class A { public int Value { get; set; } }
+public class B { public C? Nested { get; init; } }
+public class C { public int Value { get; set; } }
+```
+
 ## Flatten all members of property
 
 If a property has many members that need to be flattened but that cannot be figured out automatically, this can be configured using the `MapNestedProperties` attribute.
