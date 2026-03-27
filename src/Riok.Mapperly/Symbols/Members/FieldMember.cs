@@ -19,6 +19,7 @@ public class FieldMember(IFieldSymbol symbol, SymbolAccessor symbolAccessor)
     public ITypeSymbol Type { get; } = symbolAccessor.UpgradeNullable(symbol.Type);
     public INamedTypeSymbol ContainingType { get; } = symbol.ContainingType;
     public bool IsNullable => symbolAccessor.IsNullable(Symbol);
+    public bool IsNullableObliviousAware => symbolAccessor.IsNullable(Symbol, treatNotAnnotatedAsNullable: false);
     public bool CanGet => true;
     public bool CanGetDirectly => symbolAccessor.IsDirectlyAccessible(Symbol);
     public bool CanSet => !Symbol.IsReadOnly;

@@ -19,6 +19,8 @@ public class ParameterSourceMember(MethodParameter parameter) : IMappableMember,
     public ITypeSymbol Type => parameter.Type;
     public INamedTypeSymbol? ContainingType => null;
     public bool IsNullable => parameter.Type.IsNullable();
+    public bool IsNullableObliviousAware =>
+        parameter.Type.NullableAnnotation.IsNullable(treatNotAnnotatedAsNullable: false) || parameter.Type.IsNullableValueType();
     public bool CanGet => true;
     public bool CanGetDirectly => true;
     public bool CanSet => false;

@@ -236,4 +236,25 @@ public class QueryableProjectionNullableTest
 
         return TestHelper.VerifyGenerator(source, TestHelperOptions.DisabledNullable);
     }
+
+    [Fact]
+    public Task ClassToClassNestedAndCollectionMemberMappingDisabledNullableContext()
+    {
+        // see https://github.com/riok/mapperly/issues/1293
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            public partial System.Linq.IQueryable<B> Map(System.Linq.IQueryable<A> q);
+
+            [MapProperty("Nested.Value", nameof(B.NestedValue))]
+            private partial B Map(A source);
+            """,
+            "public class A { public C Nested { get; set; } public System.Collections.Generic.ICollection<D> Values { get; set; } }",
+            "public class B { public string NestedValue { get; set; } public System.Collections.Generic.List<E> Values { get; set; } }",
+            "public class C { public string Value { get; set; } }",
+            "public class D { public int Value { get; set; } }",
+            "public class E { public int Value { get; set; } }"
+        );
+
+        return TestHelper.VerifyGenerator(source, TestHelperOptions.DisabledNullable);
+    }
 }

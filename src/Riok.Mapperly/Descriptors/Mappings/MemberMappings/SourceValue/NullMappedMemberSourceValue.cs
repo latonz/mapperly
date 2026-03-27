@@ -17,17 +17,19 @@ public class NullMappedMemberSourceValue(
     MemberPathGetter sourceGetter,
     ITypeSymbol targetType,
     NullFallbackValue nullFallback,
-    bool useNullConditionalAccess
+    bool useNullConditionalAccess,
+    bool treatNotAnnotatedAsNullable
 ) : ISourceValue
 {
     private readonly INewInstanceMapping _delegateMapping = delegateMapping;
     private readonly NullFallbackValue _nullFallback = nullFallback;
     private readonly MemberPathGetter _sourceGetter = sourceGetter;
+    private readonly bool _treatNotAnnotatedAsNullable = treatNotAnnotatedAsNullable;
 
     public ExpressionSyntax Build(TypeMappingBuildContext ctx)
     {
         // if the source is not nullable, return it directly.
-        if (!_sourceGetter.MemberPath.IsAnyNullable())
+        if (!_sourceGetter.MemberPath.IsAnyNullable(_treatNotAnnotatedAsNullable))
         {
             ctx = ctx.WithSource(_sourceGetter.BuildAccess(ctx.Source));
             return _delegateMapping.Build(ctx);
@@ -49,7 +51,10 @@ public class NullMappedMemberSourceValue(
         // source.A?.B == null ? <null-substitute> : Map(source.A.B.Value)
         // use simplified coalesce expression for synthetic mappings:
         // source.A?.B ?? <null-substitute>
-        if (_delegateMapping.IsSynthetic && (useNullConditionalAccess || !_sourceGetter.MemberPath.IsAnyObjectPathNullable()))
+        if (
+            _delegateMapping.IsSynthetic
+            && (useNullConditionalAccess || !_sourceGetter.MemberPath.IsAnyObjectPathNullable(_treatNotAnnotatedAsNullable))
+        )
         {
             var nullConditionalSourceAccess = _sourceGetter.BuildAccess(ctx.Source, nullConditional: true);
             var nameofSourceAccess = _sourceGetter.BuildAccess(ctx.Source, nullConditional: false);
@@ -79,8 +84,9 @@ public class NullMappedMemberSourceValue(
         var other = (NullMappedMemberSourceValue)obj;
         return _delegateMapping.Equals(other._delegateMapping)
             && _nullFallback == other._nullFallback
-            && _sourceGetter.Equals(other._sourceGetter);
+            && _sourceGetter.Equals(other._sourceGetter)
+            && _treatNotAnnotatedAsNullable == other._treatNotAnnotatedAsNullable;
     }
 
-    public override int GetHashCode() => HashCode.Combine(_delegateMapping, _nullFallback, _sourceGetter);
+    public override int GetHashCode() => HashCode.Combine(_delegateMapping, _nullFallback, _sourceGetter, _treatNotAnnotatedAsNullable);
 }

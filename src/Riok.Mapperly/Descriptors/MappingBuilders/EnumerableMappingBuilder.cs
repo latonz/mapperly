@@ -34,7 +34,15 @@ public static class EnumerableMappingBuilder
         if (!ctx.CollectionInfos.Source.ImplementsIEnumerable || !ctx.CollectionInfos.Target.ImplementsIEnumerable)
             return null;
 
-        var elementMapping = ctx.FindOrBuildMapping(ctx.CollectionInfos.Source.EnumeratedType, ctx.CollectionInfos.Target.EnumeratedType);
+        var sourceEnumeratedType = ctx.CollectionInfos.Source.EnumeratedType;
+        var targetEnumeratedType = ctx.CollectionInfos.Target.EnumeratedType;
+        if (ctx.IsExpression)
+        {
+            sourceEnumeratedType = ctx.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(sourceEnumeratedType);
+            targetEnumeratedType = ctx.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(targetEnumeratedType);
+        }
+
+        var elementMapping = ctx.FindOrBuildMapping(sourceEnumeratedType, targetEnumeratedType);
         if (elementMapping == null)
             return null;
 
@@ -80,7 +88,15 @@ public static class EnumerableMappingBuilder
             return new NoOpMapping(ctx.Source, ctx.Target);
         }
 
-        var elementMapping = ctx.FindOrBuildMapping(ctx.CollectionInfos.Source.EnumeratedType, ctx.CollectionInfos.Target.EnumeratedType);
+        var sourceEnumeratedType = ctx.CollectionInfos.Source.EnumeratedType;
+        var targetEnumeratedType = ctx.CollectionInfos.Target.EnumeratedType;
+        if (ctx.IsExpression)
+        {
+            sourceEnumeratedType = ctx.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(sourceEnumeratedType);
+            targetEnumeratedType = ctx.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(targetEnumeratedType);
+        }
+
+        var elementMapping = ctx.FindOrBuildMapping(sourceEnumeratedType, targetEnumeratedType);
         if (elementMapping == null)
             return null;
 

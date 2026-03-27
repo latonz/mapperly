@@ -35,6 +35,8 @@ public abstract class MemberPath(ITypeSymbol rootType, IReadOnlyList<IMappableMe
     /// </summary>
     public abstract ITypeSymbol MemberType { get; }
 
+    public abstract ITypeSymbol GetMemberType(bool treatNotAnnotatedAsNullable = true);
+
     /// <summary>
     /// Gets the full name of the path (e.g. A.B.C).
     /// </summary>
@@ -51,22 +53,26 @@ public abstract class MemberPath(ITypeSymbol rootType, IReadOnlyList<IMappableMe
     /// If the <see cref="Member"/> is nullable, the entire <see cref="Path"/> is not returned.
     /// </summary>
     /// <returns>All nullable sub-paths of the <see cref="ObjectPath"/>.</returns>
-    public IEnumerable<IReadOnlyList<IMappableMember>> ObjectPathNullableSubPaths()
+    public IEnumerable<IReadOnlyList<IMappableMember>> ObjectPathNullableSubPaths(bool treatNotAnnotatedAsNullable = true)
     {
         var pathParts = new List<IMappableMember>(Path.Count);
         foreach (var pathPart in ObjectPath)
         {
             pathParts.Add(pathPart);
-            if (!pathPart.IsNullable)
+            if (!IsMemberNullable(pathPart, treatNotAnnotatedAsNullable))
                 continue;
 
             yield return pathParts.ToArray();
         }
     }
 
-    public bool IsAnyNullable() => Path.Any(p => p.IsNullable);
+    public bool IsAnyNullable(bool treatNotAnnotatedAsNullable = true) => Path.Any(p => IsMemberNullable(p, treatNotAnnotatedAsNullable));
 
-    public bool IsAnyObjectPathNullable() => ObjectPath.Any(p => p.IsNullable);
+    public bool IsAnyObjectPathNullable(bool treatNotAnnotatedAsNullable = true) =>
+        ObjectPath.Any(p => IsMemberNullable(p, treatNotAnnotatedAsNullable));
+
+    private static bool IsMemberNullable(IMappableMember member, bool treatNotAnnotatedAsNullable) =>
+        treatNotAnnotatedAsNullable ? member.IsNullable : member.IsNullableObliviousAware;
 
     public MemberPathGetter BuildGetter(SimpleMappingBuilderContext ctx) => MemberPathGetter.Build(ctx, this);
 

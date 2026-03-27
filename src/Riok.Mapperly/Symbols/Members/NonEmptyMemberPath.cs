@@ -25,8 +25,10 @@ public class NonEmptyMemberPath : MemberPath
     /// <summary>
     /// Gets the type of the <see cref="Member"/>. If any part of the path is nullable, this type will be nullable too.
     /// </summary>
-    public override ITypeSymbol MemberType =>
-        IsAnyNullable() ? Member.Type.WithNullableAnnotation(NullableAnnotation.Annotated) : Member.Type;
+    public override ITypeSymbol MemberType => GetMemberType();
+
+    public override ITypeSymbol GetMemberType(bool treatNotAnnotatedAsNullable = true) =>
+        IsAnyNullable(treatNotAnnotatedAsNullable) ? Member.Type.WithNullableAnnotation(NullableAnnotation.Annotated) : Member.Type;
 
     public MemberPathSetter BuildSetter(SimpleMappingBuilderContext ctx) => MemberPathSetter.Build(ctx, this);
 

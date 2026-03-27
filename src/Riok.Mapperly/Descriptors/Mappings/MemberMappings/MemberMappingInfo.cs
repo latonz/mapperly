@@ -18,7 +18,10 @@ public record MemberMappingInfo(
     public MemberMappingInfo(NonEmptyMemberPath targetMember, MemberValueMappingConfiguration configuration)
         : this(null, targetMember, configuration) { }
 
-    public bool IsSourceNullable => SourceMember?.MemberPath.IsAnyNullable() ?? ValueConfiguration?.Value?.ConstantValue.IsNull ?? true;
+    public bool IsSourceNullable => IsSourceNullableAtPath();
+
+    public bool IsSourceNullableAtPath(bool treatNotAnnotatedAsNullable = true) =>
+        SourceMember?.MemberPath.IsAnyNullable(treatNotAnnotatedAsNullable) ?? ValueConfiguration?.Value?.ConstantValue.IsNull ?? true;
 
     private string DebuggerDisplay =>
         $"{SourceMember?.MemberPath.FullName ?? ValueConfiguration?.DescribeValue()} => {TargetMember.FullName}";
@@ -29,12 +32,16 @@ public record MemberMappingInfo(
     /// </summary>
     public bool IsAutoMatch => Configuration == null && ValueConfiguration == null;
 
-    public TypeMappingKey ToTypeMappingKey()
+    public TypeMappingKey ToTypeMappingKey(bool treatNotAnnotatedAsNullable = true)
     {
         if (SourceMember == null)
             throw new InvalidOperationException($"{SourceMember} and {TargetMember} need to be set to create a {nameof(TypeMappingKey)}");
 
-        return new TypeMappingKey(SourceMember.MemberPath.MemberType, TargetMember.MemberType, Configuration?.ToTypeMappingConfiguration());
+        return new TypeMappingKey(
+            SourceMember.MemberPath.GetMemberType(treatNotAnnotatedAsNullable),
+            TargetMember.GetMemberType(treatNotAnnotatedAsNullable),
+            Configuration?.ToTypeMappingConfiguration()
+        );
     }
 
     public string DescribeSource()

@@ -18,6 +18,11 @@ public interface IMappableMember
     bool IsNullable { get; }
 
     /// <summary>
+    /// Whether the member is nullable while treating nullable-oblivious reference types as non-nullable.
+    /// </summary>
+    bool IsNullableObliviousAware { get; }
+
+    /// <summary>
     /// Whether the member can be read using direct access or an unsafe accessor method.
     /// </summary>
     bool CanGet { get; }

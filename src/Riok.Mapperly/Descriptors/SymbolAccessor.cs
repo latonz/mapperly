@@ -91,14 +91,21 @@ public class SymbolAccessor(CompilationContext compilationContext, INamedTypeSym
         };
     }
 
-    public bool IsNullable(ISymbol symbol)
+    public bool IsNullable(ISymbol symbol, bool treatNotAnnotatedAsNullable = true)
     {
         return symbol switch
         {
-            ITypeSymbol t => t.IsNullable(),
-            IPropertySymbol p => p.Type.IsNullable() || TryHasAttribute<MaybeNullAttribute>(p),
-            IFieldSymbol f => f.Type.IsNullable() || TryHasAttribute<MaybeNullAttribute>(f),
-            IParameterSymbol p => p.Type.IsNullable() || TryHasAttribute<MaybeNullAttribute>(p),
+            ITypeSymbol t => t.IsNullableReferenceType() && t.NullableAnnotation.IsNullable(treatNotAnnotatedAsNullable)
+                || t.IsNullableValueType(),
+            IPropertySymbol p => p.Type.NullableAnnotation.IsNullable(treatNotAnnotatedAsNullable)
+                || p.Type.IsNullableValueType()
+                || TryHasAttribute<MaybeNullAttribute>(p),
+            IFieldSymbol f => f.Type.NullableAnnotation.IsNullable(treatNotAnnotatedAsNullable)
+                || f.Type.IsNullableValueType()
+                || TryHasAttribute<MaybeNullAttribute>(f),
+            IParameterSymbol p => p.Type.NullableAnnotation.IsNullable(treatNotAnnotatedAsNullable)
+                || p.Type.IsNullableValueType()
+                || TryHasAttribute<MaybeNullAttribute>(p),
             _ => false,
         };
     }
@@ -258,16 +265,44 @@ public class SymbolAccessor(CompilationContext compilationContext, INamedTypeSym
     /// <returns>The <paramref name="type"/> or its non-nullable variant.</returns>
     internal ITypeSymbol NonNullableIfNullableReferenceTypesDisabled(ITypeSymbol type, ITypeSymbol? userMappingType = null)
     {
-        if (
-            type.IsNullableReferenceType()
-            && _originalNullableTypes.TryGetValue(userMappingType ?? type, out var originalType)
-            && originalType.NullableAnnotation == NullableAnnotation.None
-        )
+        return _originalNullableTypes.TryGetValue(userMappingType ?? type, out var originalType)
+            ? RestoreNullableObliviousAsNonNullable(type, originalType)
+            : type;
+    }
+
+    private ITypeSymbol RestoreNullableObliviousAsNonNullable(ITypeSymbol type, ITypeSymbol originalType)
+    {
+        var normalizedType = type;
+
+        if (type is INamedTypeSymbol { TypeArguments.Length: > 0 } namedType && originalType is INamedTypeSymbol originalNamedType)
         {
-            return type.NonNullable();
+            var normalizedTypeArguments = namedType
+                .TypeArguments.Select(
+                    (typeArgument, i) => RestoreNullableObliviousAsNonNullable(typeArgument, originalNamedType.TypeArguments[i])
+                )
+                .ToImmutableArray();
+
+            normalizedType = namedType.ConstructedFrom.Construct(
+                normalizedTypeArguments,
+                normalizedTypeArguments.Select(typeArgument => typeArgument.NullableAnnotation).ToImmutableArray()
+            );
+        }
+        else if (type is IArrayTypeSymbol arrayType && originalType is IArrayTypeSymbol originalArrayType)
+        {
+            var normalizedElementType = RestoreNullableObliviousAsNonNullable(arrayType.ElementType, originalArrayType.ElementType);
+            normalizedType = Compilation.CreateArrayTypeSymbol(
+                normalizedElementType,
+                arrayType.Rank,
+                normalizedElementType.NullableAnnotation
+            );
         }
 
-        return type;
+        if (originalType.NullableAnnotation == NullableAnnotation.None && normalizedType.IsNullableReferenceType())
+        {
+            normalizedType = normalizedType.NonNullable();
+        }
+
+        return normalizedType;
     }
 
     internal IEnumerable<AttributeData> GetAttributes<T>(ISymbol symbol)

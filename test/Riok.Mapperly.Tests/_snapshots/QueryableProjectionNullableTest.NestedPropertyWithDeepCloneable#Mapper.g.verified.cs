@@ -14,8 +14,8 @@ public partial class Mapper
             source,
             x => new global::B()
             {
-                Value0 = x.Nested != null && x.Nested.Value0 != null ? x.Nested.Value0 : default,
-                Value = x.Nested != null && x.Nested.Value != null ? x.Nested.Value : default,
+                Value0 = x.Nested.Value0,
+                Value = x.Nested.Value,
             }
         );
 #nullable enable

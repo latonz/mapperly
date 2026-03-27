@@ -56,6 +56,10 @@ such mappings have several limitations:
 - Deep cloning is not applied
   :::
 
+When source types come from a nullable-oblivious context (`#nullable disable` or `<Nullable>disable</Nullable>`),
+Mapperly generates projection expressions without additional null guards for those oblivious members.
+This helps ORMs such as EF Core translate projections without introducing unnecessary null-check branches.
+
 ## Property configurations
 
 To configure property mappings add partial mapping method definitions with attributes as needed.

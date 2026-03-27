@@ -22,6 +22,8 @@ public class PropertyMember(IPropertySymbol symbol, SymbolAccessor symbolAccesso
 
     public bool IsNullable => symbolAccessor.IsNullable(Symbol);
 
+    public bool IsNullableObliviousAware => symbolAccessor.IsNullable(Symbol, treatNotAnnotatedAsNullable: false);
+
     public bool CanGet => !Symbol.IsWriteOnly && (Symbol.GetMethod == null || symbolAccessor.IsMemberAccessible(Symbol.GetMethod));
 
     public bool CanGetDirectly =>

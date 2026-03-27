@@ -65,7 +65,9 @@ internal static class MemberMappingBuilder
         [NotNullWhen(true)] out ISourceValue? sourceValue
     )
     {
-        var mappingKey = memberMappingInfo.ToTypeMappingKey();
+        var treatNotAnnotatedAsNullable = !ctx.BuilderContext.IsExpression;
+        var mappingKey = BuildMemberMappingKey(ctx, memberMappingInfo, treatNotAnnotatedAsNullable);
+
         var delegateMapping = ctx.BuilderContext.FindOrBuildLooseNullableMapping(
             mappingKey,
             diagnosticLocation: memberMappingInfo.Configuration?.Location
@@ -85,9 +87,11 @@ internal static class MemberMappingBuilder
             return false;
         }
 
-        var memberTargetNullable = memberMappingInfo.TargetMember.MemberType.IsNullable();
+        var memberTargetType = BuildMemberTargetType(ctx, memberMappingInfo, treatNotAnnotatedAsNullable);
+
+        var memberTargetNullable = memberTargetType.IsNullable();
         var delegateTargetNullable = delegateMapping.TargetType.IsNullable();
-        var memberSourceNullable = memberMappingInfo.IsSourceNullable;
+        var memberSourceNullable = memberMappingInfo.IsSourceNullableAtPath(treatNotAnnotatedAsNullable);
         var delegateSourceNullable = delegateMapping.SourceType.IsNullable();
 
         if (
@@ -97,13 +101,7 @@ internal static class MemberMappingBuilder
             && !(delegateSourceNullable && !delegateTargetNullable)
         )
         {
-            ctx.BuilderContext.ReportDiagnostic(
-                DiagnosticDescriptors.NullableSourceValueToNonNullableTargetValue,
-                sourceMember.MemberPath.FullName,
-                sourceMember.MemberPath.RootType.ToDisplayString(),
-                targetMember.FullName,
-                targetMember.RootType.ToDisplayString()
-            );
+            ReportNullableSourceValueToNonNullableTargetValueDiagnostic(ctx, sourceMember, targetMember);
         }
 
         if (
@@ -114,7 +112,7 @@ internal static class MemberMappingBuilder
             sourceValue = new MappedMemberSourceValue(
                 delegateMapping,
                 sourceMember.MemberPath.BuildGetter(ctx.BuilderContext),
-                true,
+                memberSourceNullable,
                 false
             );
             return true;
@@ -132,8 +130,58 @@ internal static class MemberMappingBuilder
             return false;
         }
 
-        sourceValue = BuildInlineNullHandlingMapping(ctx, delegateMapping, sourceMember.MemberPath, targetMember.MemberType);
+        sourceValue = BuildInlineNullHandlingMapping(
+            ctx,
+            delegateMapping,
+            sourceMember.MemberPath,
+            memberTargetType,
+            treatNotAnnotatedAsNullable
+        );
         return true;
+    }
+
+    private static TypeMappingKey BuildMemberMappingKey(
+        IMembersBuilderContext<IMapping> ctx,
+        MemberMappingInfo memberMappingInfo,
+        bool treatNotAnnotatedAsNullable
+    )
+    {
+        var mappingKey = memberMappingInfo.ToTypeMappingKey(treatNotAnnotatedAsNullable);
+        if (!ctx.BuilderContext.IsExpression)
+            return mappingKey;
+
+        return new TypeMappingKey(
+            ctx.BuilderContext.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(mappingKey.Source),
+            ctx.BuilderContext.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(mappingKey.Target),
+            mappingKey.Configuration
+        );
+    }
+
+    private static ITypeSymbol BuildMemberTargetType(
+        IMembersBuilderContext<IMapping> ctx,
+        MemberMappingInfo memberMappingInfo,
+        bool treatNotAnnotatedAsNullable
+    )
+    {
+        var memberTargetType = memberMappingInfo.TargetMember.GetMemberType(treatNotAnnotatedAsNullable);
+        return ctx.BuilderContext.IsExpression
+            ? ctx.BuilderContext.SymbolAccessor.NonNullableIfNullableReferenceTypesDisabled(memberTargetType)
+            : memberTargetType;
+    }
+
+    private static void ReportNullableSourceValueToNonNullableTargetValueDiagnostic(
+        IMembersBuilderContext<IMapping> ctx,
+        SourceMemberPath sourceMember,
+        NonEmptyMemberPath targetMember
+    )
+    {
+        ctx.BuilderContext.ReportDiagnostic(
+            DiagnosticDescriptors.NullableSourceValueToNonNullableTargetValue,
+            sourceMember.MemberPath.FullName,
+            sourceMember.MemberPath.RootType.ToDisplayString(),
+            targetMember.FullName,
+            targetMember.RootType.ToDisplayString()
+        );
     }
 
     private static bool ValidateLoopMapping(
@@ -170,11 +218,12 @@ internal static class MemberMappingBuilder
         IMembersBuilderContext<IMapping> ctx,
         INewInstanceMapping delegateMapping,
         MemberPath sourcePath,
-        ITypeSymbol targetMemberType
+        ITypeSymbol targetMemberType,
+        bool treatNotAnnotatedAsNullable
     )
     {
         var nullFallback = NullFallbackValue.Default;
-        if (!delegateMapping.SourceType.IsNullable() && sourcePath.IsAnyNullable())
+        if (!delegateMapping.SourceType.IsNullable() && sourcePath.IsAnyNullable(treatNotAnnotatedAsNullable))
         {
             nullFallback = ctx.BuilderContext.GetNullFallbackValue(targetMemberType);
         }
@@ -184,7 +233,8 @@ internal static class MemberMappingBuilder
             sourcePath.BuildGetter(ctx.BuilderContext),
             targetMemberType,
             nullFallback,
-            !ctx.BuilderContext.IsExpression
+            !ctx.BuilderContext.IsExpression,
+            treatNotAnnotatedAsNullable
         );
     }
 
