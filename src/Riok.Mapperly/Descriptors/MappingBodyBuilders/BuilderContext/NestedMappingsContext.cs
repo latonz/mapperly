@@ -70,7 +70,7 @@ public class NestedMappingsContext
     {
         if (
             _context.SymbolAccessor.TryFindMemberPath(
-                nestedMemberPath.MemberReadType,
+                nestedMemberPath.GetMemberReadType(_context.Types),
                 pathCandidates,
                 // Use empty ignore list to support ignoring a property for normal search while flattening its properties
                 Array.Empty<string>(),

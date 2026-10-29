@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Riok.Mapperly.Descriptors;
 
 namespace Riok.Mapperly.Symbols.Members;
 
@@ -8,7 +9,7 @@ public class EmptyMemberPath(ITypeSymbol rootType) : MemberPath(rootType, [])
 {
     public override IMappableMember? Member => null;
 
-    public override ITypeSymbol MemberReadType => RootType;
+    public override ITypeSymbol GetMemberReadType(WellKnownTypes types) => RootType;
 
     public override ITypeSymbol MemberWriteType => RootType;
 

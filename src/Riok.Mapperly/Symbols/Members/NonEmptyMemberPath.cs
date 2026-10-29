@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Riok.Mapperly.Descriptors;
+using Riok.Mapperly.Helpers;
 
 namespace Riok.Mapperly.Symbols.Members;
 
@@ -29,8 +30,23 @@ public class NonEmptyMemberPath : MemberPath
     /// <summary>
     /// Gets the type of the <see cref="Member"/> in the context of read. If any part of the path is nullable, this type will be nullable too.
     /// </summary>
-    public override ITypeSymbol MemberReadType =>
-        _memberReadType ??= IsAnyReadNullable() ? Member.Type.WithNullableAnnotation(NullableAnnotation.Annotated) : Member.Type;
+    public override ITypeSymbol GetMemberReadType(WellKnownTypes types)
+    {
+        if (_memberReadType != null)
+            return _memberReadType;
+
+        if (!IsAnyReadNullable())
+            return _memberReadType = Member.Type;
+
+        // Nullable annotations alone do not lift value types to Nullable<T>.
+        var type = Member.Type;
+        if (type.IsValueType && !type.IsNullableValueType())
+        {
+            type = types.Get(typeof(Nullable<>)).Construct(type);
+        }
+
+        return _memberReadType = type.WithNullableAnnotation(NullableAnnotation.Annotated);
+    }
 
     /// <summary>
     /// Gets the type of the <see cref="Member"/> in the context of write. If last part of the path is nullable, this type will be nullable too.

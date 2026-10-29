@@ -33,7 +33,7 @@ public abstract class MemberPath(ITypeSymbol rootType, IReadOnlyList<IMappableMe
     /// Gets the type of the total path in the context of read, e.g. that of the <see cref="Member"/> if it exists, or the <see cref="RootType"/> otherwise.
     /// If any part of the path is nullable, this type will be nullable too.
     /// </summary>
-    public abstract ITypeSymbol MemberReadType { get; }
+    public abstract ITypeSymbol GetMemberReadType(WellKnownTypes types);
 
     /// <summary>
     /// Gets the type of the last part of path in the context of write, e.g. that of the <see cref="Member"/> if it exists, or the <see cref="RootType"/> otherwise.

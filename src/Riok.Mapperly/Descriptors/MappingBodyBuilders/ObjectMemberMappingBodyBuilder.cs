@@ -242,7 +242,9 @@ public static class ObjectMemberMappingBodyBuilder
             return false;
         }
 
-        var existingTargetMapping = ctx.BuilderContext.FindOrBuildExistingTargetMapping(memberMappingInfo.ToTypeMappingKey());
+        var existingTargetMapping = ctx.BuilderContext.FindOrBuildExistingTargetMapping(
+            memberMappingInfo.ToTypeMappingKey(ctx.BuilderContext.Types)
+        );
         if (existingTargetMapping is null)
             return false;
 

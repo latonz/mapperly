@@ -66,7 +66,7 @@ internal static class MemberMappingBuilder
         [NotNullWhen(true)] out SourceValueBuilder.MappedValue? result
     )
     {
-        var mappingKey = memberMappingInfo.ToTypeMappingKey();
+        var mappingKey = memberMappingInfo.ToTypeMappingKey(ctx.BuilderContext.Types);
         var delegateMapping = ctx.BuilderContext.FindOrBuildLooseNullableMapping(
             mappingKey,
             diagnosticLocation: memberMappingInfo.Configuration?.Location

@@ -69,7 +69,7 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
             target.FlatteningIdValue = DirectInt(testObject.Flattening.IdValue);
             if (testObject.NullableFlattening != null)
             {
-                target.NullableFlatteningIdValue = CastIntNullable(testObject.NullableFlattening.IdValue);
+                target.NullableFlatteningIdValue = DirectInt(testObject.NullableFlattening.IdValue);
             }
             else
             {
@@ -248,7 +248,7 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
             target.UnflatteningIdValue = DirectInt(dto.Unflattening.IdValue);
             if (dto.NullableUnflattening != null)
             {
-                target.NullableUnflatteningIdValue = CastIntNullable(dto.NullableUnflattening.IdValue);
+                target.NullableUnflatteningIdValue = DirectInt(dto.NullableUnflattening.IdValue);
             }
             else
             {
@@ -376,7 +376,7 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
             target.FlatteningIdValue = DirectInt(source.Flattening.IdValue);
             if (source.NullableFlattening != null)
             {
-                target.NullableFlatteningIdValue = CastIntNullable(source.NullableFlattening.IdValue);
+                target.NullableFlatteningIdValue = DirectInt(source.NullableFlattening.IdValue);
             }
             else
             {
@@ -559,7 +559,7 @@ namespace Riok.Mapperly.IntegrationTests.Mapper
             target.FlatteningIdValue = DirectInt(testObject.Flattening.IdValue);
             if (testObject.NullableFlattening != null)
             {
-                target.NullableFlatteningIdValue = CastIntNullable(testObject.NullableFlattening.IdValue);
+                target.NullableFlatteningIdValue = DirectInt(testObject.NullableFlattening.IdValue);
             }
             else
             {

@@ -29,13 +29,13 @@ public record MemberMappingInfo(
     /// </summary>
     public bool IsAutoMatch => Configuration == null && ValueConfiguration == null;
 
-    public TypeMappingKey ToTypeMappingKey()
+    public TypeMappingKey ToTypeMappingKey(WellKnownTypes types)
     {
         if (SourceMember == null)
             throw new InvalidOperationException($"{SourceMember} and {TargetMember} need to be set to create a {nameof(TypeMappingKey)}");
 
         return new TypeMappingKey(
-            SourceMember.MemberPath.MemberReadType,
+            SourceMember.MemberPath.GetMemberReadType(types),
             TargetMember.MemberWriteType,
             Configuration?.ToTypeMappingConfiguration()
         );

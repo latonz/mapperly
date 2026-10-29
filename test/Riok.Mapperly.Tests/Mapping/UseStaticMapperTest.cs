@@ -1,9 +1,59 @@
+using Riok.Mapperly.Abstractions;
 using Riok.Mapperly.Diagnostics;
 
 namespace Riok.Mapperly.Tests.Mapping;
 
 public class UseStaticMapperTest
 {
+    [Theory]
+    [InlineData("record", false)]
+    [InlineData("record", true)]
+    [InlineData("record struct", false)]
+    [InlineData("record struct", true)]
+    public void NullableParentShouldUseNullableValueTypeMapping(string itemKind, bool hasNonNullableMapping)
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            [MapProperty([nameof(Source.Item), nameof(Source.Item.SourceNumber)], nameof(Target.TargetNumber))]
+            [MapProperty([nameof(Source.Item), nameof(Source.Item.SourceId)], nameof(Target.TargetId))]
+            partial Target ToTarget(Source source);
+            """,
+            TestSourceBuilderOptions.Default with
+            {
+                EnumMappingStrategy = EnumMappingStrategy.ByName,
+                ThrowOnPropertyMappingNullMismatch = true,
+                ThrowOnMappingNullMismatch = true,
+            },
+            $"{itemKind} SourceItem(int? SourceNumber, int SourceId);",
+            "record Source(SourceItem? Item);",
+            "record Target(int TargetNumber, int TargetId);",
+            "[UseStaticMapper(typeof(WhenNull))] partial class Mapper { }",
+            $$"""
+            [Mapper]
+            static partial class WhenNull
+            {
+                public static int Convert(int? value) => value ?? 0;
+                {{(hasNonNullableMapping ? "public static int ConvertNonNullable(int value) => value + 1;" : "")}}
+            }
+            """
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMethodBody(
+                "ToTarget",
+                """
+                var target = new global::Target(
+                    global::WhenNull.Convert(source.Item?.SourceNumber),
+                    global::WhenNull.Convert(source.Item?.SourceId)
+                );
+                return target;
+                """
+            )
+            .HaveAssertedAllDiagnostics();
+    }
+
     [Fact]
     public void UseStaticGenericMapperStaticMethod()
     {

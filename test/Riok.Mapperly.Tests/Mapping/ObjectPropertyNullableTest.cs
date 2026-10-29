@@ -4,6 +4,64 @@ namespace Riok.Mapperly.Tests.Mapping;
 
 public class ObjectPropertyNullableTest
 {
+    [Theory]
+    [InlineData("int")]
+    [InlineData("E")]
+    [InlineData("S")]
+    [InlineData("string")]
+    public void NullableParentShouldUseNullableUserMapping(string valueType)
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            $$"""
+            partial B Map(A source);
+            private int MapNullable({{valueType}}? value) => value == null ? 0 : 1;
+            """,
+            "record A(C? Nested);",
+            "class B { public int NestedValue { get; set; } }",
+            $"record C({valueType} Value);",
+            "enum E { Value }",
+            "record struct S(int Value);"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B();
+                target.NestedValue = MapNullable(source.Nested?.Value);
+                return target;
+                """
+            );
+    }
+
+    [Fact]
+    public void NullableParentToInitOnlyPropertyShouldUseNullableUserMapping()
+    {
+        var source = TestSourceBuilder.MapperWithBodyAndTypes(
+            """
+            partial B Map(A source);
+            private int MapNullable(int? value) => value ?? 0;
+            """,
+            "record A(C? Nested);",
+            "class B { public int NestedValue { get; init; } }",
+            "record C(int Value);"
+        );
+
+        TestHelper
+            .GenerateMapper(source)
+            .Should()
+            .HaveMapMethodBody(
+                """
+                var target = new global::B()
+                {
+                    NestedValue = MapNullable(source.Nested?.Value),
+                };
+                return target;
+                """
+            );
+    }
+
     [Fact]
     public void NullableIntToNullableIntProperty()
     {
