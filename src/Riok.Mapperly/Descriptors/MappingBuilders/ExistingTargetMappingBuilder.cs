@@ -12,6 +12,7 @@ public class ExistingTargetMappingBuilder(MappingCollection mappings, MapperDecl
     private static readonly IReadOnlyCollection<BuildExistingTargetMapping> _builders =
     [
         UseNamedMappingBuilder.TryBuildExistingTargetMapping,
+        GenericUserMappingBuilder.TryBuildExistingTargetMapping,
         NullableMappingBuilder.TryBuildExistingTargetMapping,
         DerivedTypeMappingBuilder.TryBuildExistingTargetMapping,
         DictionaryMappingBuilder.TryBuildExistingTargetMapping,
@@ -25,6 +26,8 @@ public class ExistingTargetMappingBuilder(MappingCollection mappings, MapperDecl
     {
         return mappings.FindExistingInstanceMapping(mappingKey);
     }
+
+    public IExistingTargetMapping? FindGeneric(TypeMappingKey mappingKey) => mappings.FindGenericExistingTargetMapping(mappingKey);
 
     public IExistingTargetMapping? FindOrResolveNamed(SimpleMappingBuilderContext ctx, string name, out bool ambiguousName)
     {

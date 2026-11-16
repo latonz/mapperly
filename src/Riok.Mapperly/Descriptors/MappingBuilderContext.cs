@@ -153,6 +153,11 @@ public class MappingBuilderContext : SimpleMappingBuilderContext
     public virtual INewInstanceMapping? FindMapping(TypeMappingKey mappingKey, ParameterScope? scope = null) =>
         MappingBuilder.Find(mappingKey, scope);
 
+    public INewInstanceMapping? FindGenericMapping(TypeMappingKey mappingKey) => MappingBuilder.FindGeneric(mappingKey);
+
+    public IExistingTargetMapping? FindGenericExistingTargetMapping(TypeMappingKey mappingKey) =>
+        ExistingTargetMappingBuilder.FindGeneric(mappingKey);
+
     /// <summary>
     /// Finds a user-implemented mapping without marking rejected mappings or their additional parameters as used.
     /// </summary>

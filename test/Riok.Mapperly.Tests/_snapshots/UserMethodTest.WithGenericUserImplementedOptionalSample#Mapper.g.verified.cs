@@ -21,6 +21,7 @@ public partial class Mapper
         {
             global::Document x when typeof(TTarget).IsAssignableFrom(typeof(global::DocumentDto)) => (TTarget)(object)MapDocument(x),
             global::User x when typeof(TTarget).IsAssignableFrom(typeof(global::UserDto)) => (TTarget)(object)MapUser(x),
+            global::Optional<global::User> x when typeof(TTarget).IsAssignableFrom(typeof(global::Optional<global::UserDto>)) => (TTarget)(object)MapOptional<global::User, global::UserDto>(x),
             _ => throw new global::System.ArgumentException($"Cannot map {source.GetType()} to {typeof(TTarget)} as there is no known type mapping", nameof(source)),
         };
     }

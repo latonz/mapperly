@@ -13,6 +13,7 @@ public class MappingBuilder(MappingCollection mappings, MapperDeclaration mapper
     private static readonly IReadOnlyCollection<BuildMapping> _builders =
     [
         UseNamedMappingBuilder.TryBuildMapping,
+        GenericUserMappingBuilder.TryBuildMapping,
         CtorMappingBuilder.TryBuildNullableMapping,
         NullableMappingBuilder.TryBuildMapping,
         DerivedTypeMappingBuilder.TryBuildMapping,
@@ -47,6 +48,8 @@ public class MappingBuilder(MappingCollection mappings, MapperDeclaration mapper
 
     public UserImplementedMethodMapping? FindUserImplemented(TypeMappingKey mapping, ParameterScope? scope = null) =>
         mappings.FindNewInstanceUserImplementedMapping(mapping, scope);
+
+    public INewInstanceMapping? FindGeneric(TypeMappingKey mapping) => mappings.FindGenericNewInstanceMapping(mapping);
 
     public INewInstanceMapping? FindOrResolveNamed(SimpleMappingBuilderContext ctx, string name, out bool ambiguousName)
     {

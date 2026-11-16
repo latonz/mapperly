@@ -1,3 +1,4 @@
+using Riok.Mapperly.Descriptors.MappingBuilders;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.MemberMappings;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
@@ -11,6 +12,7 @@ public class MappingBodyBuilder(MappingCollection mappings)
 {
     public void BuildMappingBodies(CancellationToken cancellationToken)
     {
+        var runtimeMappingBuilders = new List<Action>();
         foreach (var (typeMapping, ctx) in mappings.DequeueMappingsToBuildBody())
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -47,16 +49,31 @@ public class MappingBodyBuilder(MappingCollection mappings)
                 case UserDefinedExpressionMethodMapping mapping:
                     ExpressionMappingBodyBuilder.BuildMappingBody(ctx, mapping);
                     break;
-                case UserDefinedNewInstanceRuntimeTargetTypeParameterMapping mapping:
-                    RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping);
-                    break;
                 case UserDefinedNewInstanceGenericTypeMapping mapping:
-                    RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping);
+                    var genericDerivedMappings = DerivedTypeMappingBuilder.TryBuildContainedMappings(ctx, true);
+                    runtimeMappingBuilders.Add(() =>
+                        RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping, genericDerivedMappings)
+                    );
+                    break;
+                case UserDefinedNewInstanceRuntimeTargetTypeMapping mapping:
+                    var derivedMappings = DerivedTypeMappingBuilder.TryBuildContainedMappings(ctx, true);
+                    runtimeMappingBuilders.Add(() => RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping, derivedMappings));
                     break;
                 case UserDefinedExistingTargetGenericTypeMapping mapping:
-                    RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping);
+                    var existingTargetDerivedMappings = DerivedTypeMappingBuilder.TryBuildExistingTargetContainedMappings(ctx, true);
+                    runtimeMappingBuilders.Add(() =>
+                        RuntimeTargetTypeMappingBodyBuilder.BuildMappingBody(ctx, mapping, existingTargetDerivedMappings)
+                    );
                     break;
             }
+        }
+
+        // Nested mappings and explicit derived type registrations can discover concrete generic helpers.
+        // Build runtime switches only after this queue (including newly enqueued mappings) has been drained.
+        foreach (var buildRuntimeMapping in runtimeMappingBuilders)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            buildRuntimeMapping();
         }
     }
 }

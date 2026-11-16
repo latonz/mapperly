@@ -62,11 +62,32 @@ internal sealed class GenericUserImplementedNewInstanceMethodMapping(
             return null;
 
         var typeArguments = method.TypeParameters.Select(tp => result.InferredTypes[tp]).ToArray();
+        var constructedMethod = method.Construct(typeArguments);
+
+        // Check the constructed signature as inference can lose outer nullable annotations.
+        // The return type must be assignable to the requested target, not the other way around.
+        if (!checker.CanAssign(concreteSourceType, constructedMethod.Parameters[sourceParameter.Ordinal].Type))
+            return null;
+
+        var returnType = constructedMethod.ReturnType;
+        if (
+            targetNullability == UserImplementedMethodMapping.TargetNullability.NeverNull
+            || (
+                targetNullability == UserImplementedMethodMapping.TargetNullability.NotNullIfSourceNotNull
+                && !concreteSourceType.IsNullable()
+            )
+        )
+        {
+            returnType = returnType.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
+        }
+
+        if (!checker.CanAssign(returnType, concreteTargetType))
+            return null;
 
         var concreteTargetOriginalValueParameter = targetOriginalValueParameter;
         if (concreteTargetOriginalValueParameter is { } p)
         {
-            concreteTargetOriginalValueParameter = p with { Type = method.Construct(typeArguments).Parameters[p.Ordinal].Type };
+            concreteTargetOriginalValueParameter = p with { Type = constructedMethod.Parameters[p.Ordinal].Type };
         }
 
         return new UserImplementedGenericMethodMapping(

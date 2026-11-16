@@ -59,7 +59,15 @@ internal sealed class GenericUserImplementedExistingTargetMethodMapping(
         if (!result.Success)
             return null;
 
-        var typeArguments = method.TypeParameters.Select(tp => result.InferredTypes[tp]).ToList();
+        var typeArguments = method.TypeParameters.Select(tp => result.InferredTypes[tp]).ToArray();
+        var constructedMethod = method.Construct(typeArguments);
+        if (
+            !checker.CanAssign(concreteSourceType, constructedMethod.Parameters[sourceParameter.Ordinal].Type)
+            || !checker.CanAssign(concreteTargetType, constructedMethod.Parameters[targetParameter.Ordinal].Type)
+        )
+        {
+            return null;
+        }
 
         return new UserImplementedGenericExistingTargetMethodMapping(
             receiver,

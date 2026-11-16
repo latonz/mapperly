@@ -1,4 +1,3 @@
-using Riok.Mapperly.Descriptors.MappingBuilders;
 using Riok.Mapperly.Descriptors.Mappings;
 using Riok.Mapperly.Descriptors.Mappings.ExistingTarget;
 using Riok.Mapperly.Descriptors.Mappings.UserMappings;
@@ -10,7 +9,11 @@ namespace Riok.Mapperly.Descriptors.MappingBodyBuilders;
 
 public static class RuntimeTargetTypeMappingBodyBuilder
 {
-    public static void BuildMappingBody(MappingBuilderContext ctx, UserDefinedNewInstanceGenericTypeMapping mapping)
+    public static void BuildMappingBody(
+        MappingBuilderContext ctx,
+        UserDefinedNewInstanceGenericTypeMapping mapping,
+        IReadOnlyCollection<INewInstanceMapping>? derivedTypeMappings
+    )
     {
         // source nulls are filtered out by the type switch arms,
         // therefore set source type always to nun-nullable
@@ -24,10 +27,14 @@ public static class RuntimeTargetTypeMappingBodyBuilder
                 ).Success
             );
 
-        BuildMappingBody(ctx, mapping, mappings);
+        BuildMappingBody(ctx, mapping, mappings, derivedTypeMappings);
     }
 
-    public static void BuildMappingBody(MappingBuilderContext ctx, UserDefinedExistingTargetGenericTypeMapping mapping)
+    public static void BuildMappingBody(
+        MappingBuilderContext ctx,
+        UserDefinedExistingTargetGenericTypeMapping mapping,
+        IReadOnlyCollection<IExistingTargetMapping>? derivedTypeMappings
+    )
     {
         // source nulls are filtered out by the type switch arms,
         // therefore set source type always to non-nullable
@@ -41,10 +48,14 @@ public static class RuntimeTargetTypeMappingBodyBuilder
                 ).Success
             );
 
-        BuildExistingTargetMappingBody(ctx, mapping, mappings);
+        BuildExistingTargetMappingBody(ctx, mapping, derivedTypeMappings == null ? mappings : derivedTypeMappings.Concat(mappings));
     }
 
-    public static void BuildMappingBody(MappingBuilderContext ctx, UserDefinedNewInstanceRuntimeTargetTypeMapping mapping)
+    public static void BuildMappingBody(
+        MappingBuilderContext ctx,
+        UserDefinedNewInstanceRuntimeTargetTypeMapping mapping,
+        IReadOnlyCollection<INewInstanceMapping>? derivedTypeMappings
+    )
     {
         // source nulls are filtered out by the type switch arms,
         // therefore set source type always to nun-nullable
@@ -55,7 +66,7 @@ public static class RuntimeTargetTypeMappingBodyBuilder
                 && ctx.SymbolAccessor.CanAssign(x.TargetType, mapping.TargetType)
             );
 
-        BuildMappingBody(ctx, mapping, mappings);
+        BuildMappingBody(ctx, mapping, mappings, derivedTypeMappings);
     }
 
     private static IEnumerable<INewInstanceUserMapping> GetUserMappingCandidates(MappingBuilderContext ctx) =>
@@ -97,11 +108,11 @@ public static class RuntimeTargetTypeMappingBodyBuilder
     private static void BuildMappingBody(
         MappingBuilderContext ctx,
         UserDefinedNewInstanceRuntimeTargetTypeMapping mapping,
-        IEnumerable<ITypeMapping> childMappings
+        IEnumerable<ITypeMapping> childMappings,
+        IReadOnlyCollection<INewInstanceMapping>? derivedTypeMappings
     )
     {
         // include derived type mappings declared on this user defined method
-        var derivedTypeMappings = DerivedTypeMappingBuilder.TryBuildContainedMappings(ctx, true);
         if (derivedTypeMappings != null)
         {
             childMappings = derivedTypeMappings.Concat(childMappings);

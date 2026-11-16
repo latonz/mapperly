@@ -10,6 +10,11 @@ namespace Riok.Mapperly.Helpers;
 public class GenericTypeChecker(SymbolAccessor accessor, WellKnownTypes types)
 {
     /// <summary>
+    /// Checks assignability after substituting a generic method's type parameters.
+    /// </summary>
+    public bool CanAssign(ITypeSymbol source, ITypeSymbol target) => accessor.CanAssign(source, target);
+
+    /// <summary>
     /// Tries to infer the actual types for the type parameters
     /// and checks whether these types conform to the type parameter constraints.
     /// </summary>

@@ -63,9 +63,12 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
     public IReadOnlyDictionary<TypeMappingKey, INewInstanceMapping> NewInstanceMappings => _newInstanceMappings.DefaultMappings;
 
     /// <summary>
-    /// All existing target user mappings registered by their methods.
+    /// All existing target user mappings, including concrete generic mappings discovered during mapping resolution.
     /// </summary>
-    public IEnumerable<IExistingTargetUserMapping> ExistingTargetUserMappings => _existingTargetMappings.UserMappings;
+    public IEnumerable<IExistingTargetUserMapping> ExistingTargetUserMappings =>
+        _existingTargetMappings
+            .UserMappings.Where(x => x is not GenericUserImplementedExistingTargetMethodMapping)
+            .Concat(_existingTargetMappings.DefaultMappings.Values.OfType<UserImplementedGenericExistingTargetMethodMapping>());
 
     /// <inheritdoc cref="MappingCollectionInstance{T,TUserMapping}.UsedDuplicatedNonDefaultNonReferencedUserMappings"/>
     public IEnumerable<IUserMapping> UsedDuplicatedNonDefaultNonReferencedUserMappings =>
@@ -79,14 +82,13 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
         if (_newInstanceMappings.Find(mappingKey, scope) is { } mapping)
             return mapping;
 
-        // If an explicit mapping is referenced by name (Use = ...),
-        // do not match generic templates here.
-        // The referenced mapping is resolved later by the UseNamedMappingBuilder,
-        // otherwise a generic template would shadow the explicitly referenced mapping.
-        if (mappingKey.Configuration.UseNamedMapping != null)
-            return null;
+        var genericMapping = FindGenericNewInstanceMapping(mappingKey);
+        if (genericMapping != null)
+        {
+            _newInstanceMappings.TryAddAsDefault(genericMapping, mappingKey.Configuration);
+        }
 
-        return TryMatchGenericNewInstanceTemplate(mappingKey);
+        return genericMapping;
     }
 
     public INewInstanceUserMapping? FindNewInstanceUserMapping(IMethodSymbol method) => _newInstanceMappings.FindUserMapping(method);
@@ -101,7 +103,13 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
             return mapping;
         }
 
-        return mappingKey.Configuration.UseNamedMapping == null ? TryMatchGenericNewInstanceTemplate(mappingKey) : null;
+        var genericMapping = FindGenericNewInstanceMapping(mappingKey);
+        if (genericMapping != null)
+        {
+            _newInstanceMappings.TryAddAsDefault(genericMapping, mappingKey.Configuration);
+        }
+
+        return genericMapping;
     }
 
     public INewInstanceMapping? FindNamedNewInstanceMapping(string name, out bool ambiguousName) =>
@@ -112,14 +120,13 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
         if (_existingTargetMappings.Find(mappingKey) is { } mapping)
             return mapping;
 
-        // If an explicit mapping is referenced by name (Use = ...),
-        // do not match generic templates here.
-        // The referenced mapping is resolved later by the UseNamedMappingBuilder,
-        // otherwise a generic template would shadow the explicitly referenced mapping.
-        if (mappingKey.Configuration.UseNamedMapping != null)
-            return null;
+        var genericMapping = FindGenericExistingTargetMapping(mappingKey);
+        if (genericMapping != null)
+        {
+            _existingTargetMappings.TryAddAsDefault(genericMapping, mappingKey.Configuration);
+        }
 
-        return TryMatchGenericExistingTargetTemplate(mappingKey);
+        return genericMapping;
     }
 
     public IExistingTargetMapping? FindExistingInstanceNamedMapping(string name, out bool ambiguousName) =>
@@ -219,9 +226,14 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
         _existingTargetMappings.AddNamedUserMapping(name, mapping);
     }
 
-    private UserImplementedGenericMethodMapping? TryMatchGenericNewInstanceTemplate(TypeMappingKey mappingKey)
+    /// <summary>
+    /// Resolves a generic helper without looking up or replacing a registered partial method for the same type pair.
+    /// The caller decides whether the result should be registered as a reusable mapping.
+    /// </summary>
+    public UserImplementedGenericMethodMapping? FindGenericNewInstanceMapping(TypeMappingKey mappingKey)
     {
-        if (_genericNewInstanceTemplates.Count == 0)
+        // Explicit name references are resolved by UseNamedMappingBuilder, including generic helpers.
+        if (mappingKey.Configuration.UseNamedMapping != null)
             return null;
 
         foreach (var template in _genericNewInstanceTemplates)
@@ -229,17 +241,16 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
             if (template.TryCreateConcreteMapping(genericTypeChecker, mappingKey.Source, mappingKey.Target) is not { } mapping)
                 continue;
 
-            // Cache the concrete mapping so subsequent lookups find it directly.
-            _newInstanceMappings.TryAddAsDefault(mapping, mappingKey.Configuration);
             return mapping;
         }
 
         return null;
     }
 
-    private IExistingTargetMapping? TryMatchGenericExistingTargetTemplate(TypeMappingKey mappingKey)
+    /// <inheritdoc cref="FindGenericNewInstanceMapping"/>
+    public IExistingTargetMapping? FindGenericExistingTargetMapping(TypeMappingKey mappingKey)
     {
-        if (_genericExistingTargetTemplates.Count == 0)
+        if (mappingKey.Configuration.UseNamedMapping != null)
             return null;
 
         foreach (var template in _genericExistingTargetTemplates)
@@ -247,8 +258,6 @@ public class MappingCollection(GenericTypeChecker genericTypeChecker)
             if (template.TryCreateConcreteMapping(genericTypeChecker, mappingKey.Source, mappingKey.Target) is not { } mapping)
                 continue;
 
-            // Cache the concrete mapping so subsequent lookups find it directly.
-            _existingTargetMappings.TryAddAsDefault(mapping, mappingKey.Configuration);
             return mapping;
         }
 

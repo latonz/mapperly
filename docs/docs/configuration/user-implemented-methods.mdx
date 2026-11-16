@@ -158,7 +158,7 @@ public partial class MyMapper
         where TSource : notnull
         where TTarget : notnull
         => source.HasValue
-           ? Optional.Of(Map(source.Value))
+           ? Optional.Of(Map<TSource, TTarget>(source.Value))
            : Optional.Empty();
     // highlight-end
 
@@ -172,6 +172,28 @@ public partial class MyMapper
 
 In this example, when Mapperly needs to map `Optional<User>` to `Optional<UserDto>`,
 it will match the `MapOptional` method and invoke it as `MapOptional<User, UserDto>(source.ModifiedBy)`.
+
+A concrete partial mapping can also delegate to a matching generic helper:
+
+```csharp
+public partial Optional<UserDto> MapUserOptional(Optional<User> source);
+// Generated body: return MapOptional<User, UserDto>(source);
+```
+
+This also applies to existing-target mappings. Explicit member or derived-type configuration
+on a partial method continues to control its generated mapping body.
+
+[Generic and runtime target type dispatchers](./generic-mapping.md) include concrete generic helper
+instantiations discovered while generating mappings. An open generic helper alone does not register
+every possible source/target combination. Declare a concrete partial mapping, use the pair in a member
+mapping, or register it with `MapDerivedType` on the dispatcher:
+
+```csharp
+[MapDerivedType<Optional<User>, Optional<UserDto>>]
+private partial TTarget Map<TSource, TTarget>(TSource source)
+    where TSource : notnull
+    where TTarget : notnull;
+```
 
 :::info
 If a non-generic user-implemented mapping method exists for an exact type pair,

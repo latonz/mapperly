@@ -36,7 +36,7 @@ public static class DerivedTypeMappingBuilder
             : BuildContainedMappings(ctx, ctx.Configuration.DerivedTypes, ctx.FindOrBuildMapping, duplicatedSourceTypesAllowed);
     }
 
-    private static IReadOnlyCollection<IExistingTargetMapping>? TryBuildExistingTargetContainedMappings(
+    public static IReadOnlyCollection<IExistingTargetMapping>? TryBuildExistingTargetContainedMappings(
         MappingBuilderContext ctx,
         bool duplicatedSourceTypesAllowed = false
     )
